@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Minimal model to allow migrations if needed later
+model PrismaInit {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+}
+
+model Athlete {
+    id Int @id @default(autoincrement())
+    dob DateTime
+    email String
+    firstName String
+    lastName String
+    sex String
+    externalId String
+    profileId String
+    activeStatus Boolean @default(true)
+    playLevel String
+    syncId String
+    syncedAt DateTime
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+
