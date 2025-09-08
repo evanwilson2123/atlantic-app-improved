@@ -16,15 +16,17 @@ export default function Navbar() {
         </div>
 
         <nav className="hidden sm:flex items-center gap-6 text-sm text-gray-600 dark:text-gray-300">
+          <SignedOut>
           <Link href="#features" className="hover:text-gray-900 dark:hover:text-white">Features</Link>
           <Link href="#showcase" className="hover:text-gray-900 dark:hover:text-white">Showcase</Link>
           <Link href="#pricing" className="hover:text-gray-900 dark:hover:text-white">Pricing</Link>
-          <SignedOut>
             <SignInButton mode="modal">
               <button className="px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">Sign in</button>
             </SignInButton>
           </SignedOut>
           <SignedIn>
+          <Link href="/create-athlete" className="hover:text-gray-900 dark:hover:text-white">Create athlete</Link>
+          <Link href="/admin" className="hover:text-gray-900 dark:hover:text-white">Admin</Link>
             <UserButton afterSignOutUrl="/">
               <UserButton.MenuItems>
                 <UserButton.Link
@@ -56,22 +58,33 @@ export default function Navbar() {
 
       {mobileMenuOpen && (
         <div className="sm:hidden mx-auto max-w-6xl px-4 pb-3">
-          <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3 grid gap-2 text-sm">
-            <div className="flex items-center justify-between px-3 pt-2">
-              <SignedOut>
-                <Link href="#features" className="px-3 py-2 rounded hover:bg-gray-50 dark:hover:bg-gray-800">Features</Link>
-                <Link href="#showcase" className="px-3 py-2 rounded hover:bg-gray-50 dark:hover:bg-gray-800">Showcase</Link>
-                <Link href="#pricing" className="px-3 py-2 rounded hover:bg-gray-50 dark:hover:bg-gray-800">Pricing</Link>
+          <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3 text-sm">
+            {/* Signed out menu */}
+            <SignedOut>
+              <nav className="grid gap-1">
+                <Link href="#features" className="px-3 py-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800">Features</Link>
+                <Link href="#showcase" className="px-3 py-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800">Showcase</Link>
+                <Link href="#pricing" className="px-3 py-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800">Pricing</Link>
+              </nav>
+              <div className="mt-2 grid gap-2">
                 <SignInButton mode="modal">
                   <button className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">Sign in</button>
                 </SignInButton>
-              </SignedOut>
-              <SignedIn>
-                <Link href="/create-athlete" className="px-3 py-2 rounded hover:bg-gray-50 dark:hover:bg-gray-800">Create athlete</Link>
-                <span className="text-gray-600 dark:text-gray-300">Account</span>
-              </SignedIn>
-              <Link href="/sign-up" className="px-3 py-2 rounded-md bg-gray-900 text-white hover:bg-black">Get started</Link>
-            </div>
+                <Link href="/sign-up" className="w-full text-center px-3 py-2 rounded-md bg-gray-900 text-white hover:bg-black">Get started</Link>
+              </div>
+            </SignedOut>
+
+            {/* Signed in menu */}
+            <SignedIn>
+              <nav className="grid gap-1">
+                <Link href="/create-athlete" className="px-3 py-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800">Create athlete</Link>
+                <Link href="/admin" className="px-3 py-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800">Admin</Link>
+              </nav>
+              <div className="mt-2 grid gap-2">
+                <span className="px-3 py-2 text-gray-600 dark:text-gray-300">Account</span>
+                <Link href="/sign-up" className="w-full text-center px-3 py-2 rounded-md bg-gray-900 text-white hover:bg-black">Get started</Link>
+              </div>
+            </SignedIn>
           </div>
         </div>
       )}

@@ -3,10 +3,14 @@ import { ValdProfileApi } from "@/lib/valdProfileApi";
 import { prisma } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 import { v4 as uuidv4 } from 'uuid';
+import { isAdmin } from "@/lib/roleChecks";
 
 export async function POST(req: NextRequest) {
     const { userId } = await auth();
     if (!userId) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (!isAdmin(userId)) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     try {
@@ -49,6 +53,24 @@ export async function POST(req: NextRequest) {
     } catch (error) {
         console.error('Error creating athlete:', error);
         return NextResponse.json({ error: "Failed to create athlete" }, { status: 500 });
+    }
+}
+
+export async function GET(req: NextRequest) {
+    const { userId } = await auth();
+    if (!userId) {
+        console.error("Unauthorized");
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (!isAdmin(userId)) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    try {
+        const athletes = await prisma.athlete.findMany();
+        return NextResponse.json({ athletes }, { status: 200 });
+    } catch (error) {
+        console.error('Error fetching athletes:', error);
+        return NextResponse.json({ error: "Failed to fetch athletes" }, { status: 500 });
     }
 }
 

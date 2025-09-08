@@ -1,7 +1,5 @@
-"use client";
-
+import CreateAthlete from '@/components/admin/CreateAthlete'
 import React from 'react'
-import AdminDashboard from '@/components/admin/AdminDashboard';
 
 const page = () => {
   return (
@@ -11,7 +9,13 @@ const page = () => {
         <div className="absolute top-40 -left-24 h-72 w-72 rounded-full bg-gradient-to-tr from-cyan-400/20 to-blue-400/20 blur-3xl" />
       </div>
       <main className="mx-auto max-w-6xl px-4 py-10 sm:py-14">
-        <AdminDashboard />
+        <div className="max-w-3xl">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Create athlete</h1>
+          <p className="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-300">Add a new athlete with basic details. Works great on mobile.</p>
+        </div>
+        <div className="mt-6">
+          <CreateAthlete />
+        </div>
       </main>
     </div>
   )
