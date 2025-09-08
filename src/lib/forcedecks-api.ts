@@ -50,7 +50,9 @@ export interface VALDResultDefinition {
 
 export interface VALDTestRecording {
   testId: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   recordingData: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sampleData?: any
   // Add more fields as needed
 }

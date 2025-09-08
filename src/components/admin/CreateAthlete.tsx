@@ -38,7 +38,7 @@ export default function AdminDash() {
     } else {
       nextValue = target.value
     }
-    setForm((prev) => ({ ...prev, [name]: nextValue as any }))
+    setForm((prev) => ({ ...prev, [name]: nextValue }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -55,6 +55,7 @@ export default function AdminDash() {
       if (!res.ok) throw new Error(data?.error || 'Failed to create athlete')
       setMessage('Athlete created successfully')
       setForm(initialState)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setMessage(err.message || 'An error occurred')
     } finally {

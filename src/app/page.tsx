@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import Link from 'next/link';
 
 export default function Home() {
   const router = useRouter();
@@ -10,7 +11,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!isSignedIn) return
-    const role = (user?.publicMetadata as any)?.role
+    const role = user?.publicMetadata?.role;
     if (role === 'ADMIN') {
       router.replace('/admin')
     } else if (role === 'ATHLETE') {
@@ -43,8 +44,8 @@ export default function Home() {
               Visualize trends, monitor readiness, and turn raw metrics into decisions. Built for coaches and athletes, on the go.
             </p>
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
-              <a href="/sign-up" className="px-5 py-3 rounded-lg bg-gradient-to-tr from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white text-sm sm:text-base shadow-lg shadow-sky-600/20 text-center">Get started free</a>
-              <a href="#features" className="px-5 py-3 rounded-lg bg-white/70 dark:bg-gray-900/70 border border-gray-200 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-900 text-gray-900 dark:text-white text-sm sm:text-base text-center">See features</a>
+              <Link href="/sign-up" className="px-5 py-3 rounded-lg bg-gradient-to-tr from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white text-sm sm:text-base shadow-lg shadow-sky-600/20 text-center">Get started free</Link>
+              <Link href="#features" className="px-5 py-3 rounded-lg bg-white/70 dark:bg-gray-900/70 border border-gray-200 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-900 text-gray-900 dark:text-white text-sm sm:text-base text-center">See features</Link>
             </div>
             <div className="mt-6 flex flex-wrap gap-2 text-xs text-gray-600 dark:text-gray-300">
               <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-1"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500"/>Privacy-first</span>
@@ -128,8 +129,8 @@ export default function Home() {
               <p className="mt-1 text-white/90 text-sm">No credit card required. Cancel anytime.</p>
             </div>
             <div className="flex gap-3">
-              <a href="/sign-up" className="px-5 py-3 rounded-lg bg-white text-gray-900 hover:bg-white/90">Create account</a>
-              <a href="#features" className="px-5 py-3 rounded-lg ring-1 ring-inset ring-white/70 hover:bg-white/10">Compare features</a>
+              <Link href="/sign-up" className="px-5 py-3 rounded-lg bg-white text-gray-900 hover:bg-white/90">Create account</Link>
+              <Link href="#features" className="px-5 py-3 rounded-lg ring-1 ring-inset ring-white/70 hover:bg-white/10">Compare features</Link>
             </div>
           </div>
         </div>
@@ -143,10 +144,10 @@ export default function Home() {
             <span className="font-medium text-gray-900 dark:text-white">Atlantic Improved</span>
           </div>
           <div className="flex gap-6">
-            <a href="#features" className="hover:text-gray-900 dark:hover:text-white">Features</a>
-            <a href="#showcase" className="hover:text-gray-900 dark:hover:text-white">Showcase</a>
-            <a href="#pricing" className="hover:text-gray-900 dark:hover:text-white">Pricing</a>
-            <a href="/sign-in" className="hover:text-gray-900 dark:hover:text-white">Sign in</a>
+            <Link href="#features" className="hover:text-gray-900 dark:hover:text-white">Features</Link>
+            <Link href="#showcase" className="hover:text-gray-900 dark:hover:text-white">Showcase</Link>
+            <Link href="#pricing" className="hover:text-gray-900 dark:hover:text-white">Pricing</Link>
+            <Link href="/sign-in" className="hover:text-gray-900 dark:hover:text-white">Sign in</Link>
           </div>
         </div>
         <div className="mt-6 text-xs">© {new Date().getFullYear()} Atlantic Improved. All rights reserved.</div>

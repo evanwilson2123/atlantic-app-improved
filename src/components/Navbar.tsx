@@ -1,11 +1,11 @@
 "use client"
 
 import { useState } from 'react'
-import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from '@clerk/nextjs'
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs'
+import Link from 'next/link';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { isSignedIn, user } = useUser();
 
   return (
     <header className="sticky top-0 z-30 backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-gray-900/60 bg-white/90 dark:bg-gray-900/80 border-b border-gray-200/60 dark:border-gray-800">
@@ -16,9 +16,9 @@ export default function Navbar() {
         </div>
 
         <nav className="hidden sm:flex items-center gap-6 text-sm text-gray-600 dark:text-gray-300">
-          <a href="#features" className="hover:text-gray-900 dark:hover:text-white">Features</a>
-          <a href="#showcase" className="hover:text-gray-900 dark:hover:text-white">Showcase</a>
-          <a href="#pricing" className="hover:text-gray-900 dark:hover:text-white">Pricing</a>
+          <Link href="#features" className="hover:text-gray-900 dark:hover:text-white">Features</Link>
+          <Link href="#showcase" className="hover:text-gray-900 dark:hover:text-white">Showcase</Link>
+          <Link href="#pricing" className="hover:text-gray-900 dark:hover:text-white">Pricing</Link>
           <SignedOut>
             <SignInButton mode="modal">
               <button className="px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">Sign in</button>
@@ -39,7 +39,7 @@ export default function Navbar() {
               </UserButton.MenuItems>
             </UserButton>
           </SignedIn>
-          <a href="/sign-up" className="px-3 py-1.5 rounded-md bg-gray-900 text-white hover:bg-black">Get started</a>
+          <Link href="/sign-up" className="px-3 py-1.5 rounded-md bg-gray-900 text-white hover:bg-black">Get started</Link>
         </nav>
 
         <div className="sm:hidden flex items-center gap-2">
@@ -59,18 +59,18 @@ export default function Navbar() {
           <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3 grid gap-2 text-sm">
             <div className="flex items-center justify-between px-3 pt-2">
               <SignedOut>
-                <a href="#features" className="px-3 py-2 rounded hover:bg-gray-50 dark:hover:bg-gray-800">Features</a>
-                <a href="#showcase" className="px-3 py-2 rounded hover:bg-gray-50 dark:hover:bg-gray-800">Showcase</a>
-                <a href="#pricing" className="px-3 py-2 rounded hover:bg-gray-50 dark:hover:bg-gray-800">Pricing</a>
+                <Link href="#features" className="px-3 py-2 rounded hover:bg-gray-50 dark:hover:bg-gray-800">Features</Link>
+                <Link href="#showcase" className="px-3 py-2 rounded hover:bg-gray-50 dark:hover:bg-gray-800">Showcase</Link>
+                <Link href="#pricing" className="px-3 py-2 rounded hover:bg-gray-50 dark:hover:bg-gray-800">Pricing</Link>
                 <SignInButton mode="modal">
                   <button className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">Sign in</button>
                 </SignInButton>
               </SignedOut>
               <SignedIn>
-                <a href="/create-athlete" className="px-3 py-2 rounded hover:bg-gray-50 dark:hover:bg-gray-800">Create athlete</a>
+                <Link href="/create-athlete" className="px-3 py-2 rounded hover:bg-gray-50 dark:hover:bg-gray-800">Create athlete</Link>
                 <span className="text-gray-600 dark:text-gray-300">Account</span>
               </SignedIn>
-              <a href="/sign-up" className="px-3 py-2 rounded-md bg-gray-900 text-white hover:bg-black">Get started</a>
+              <Link href="/sign-up" className="px-3 py-2 rounded-md bg-gray-900 text-white hover:bg-black">Get started</Link>
             </div>
           </div>
         </div>
