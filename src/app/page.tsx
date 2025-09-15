@@ -68,6 +68,7 @@ export default function Home() {
                   <div className="mt-1 text-xs text-emerald-600">+3.1%</div>
                 </div>
                 <div className="col-span-2 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 p-4 flex items-center gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src="/globe.svg" alt="dashboard" className="h-10 w-10 opacity-70"/>
                   <div>
                     <div className="text-sm font-medium">Weekly readiness</div>
@@ -103,6 +104,7 @@ export default function Home() {
               </div>
             </div>
             <div className="rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 p-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/window.svg" alt="app preview" className="w-full h-auto" />
             </div>
           </div>

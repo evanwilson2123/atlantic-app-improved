@@ -4,19 +4,18 @@ import { SimpleVALDForceDecksAPI } from '@/lib/forcedecks-api'
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const region = searchParams.get('region')
     const modifiedFromUtc = searchParams.get('modifiedFromUtc')
     const profileId = searchParams.get('profileId')
 
-    if (!region || !modifiedFromUtc) {
+    if (!modifiedFromUtc) {
       return NextResponse.json(
-        { error: 'Missing required parameters: region, modifiedFromUtc' },
+        { error: 'Missing required parameters: modifiedFromUtc' },
         { status: 400 }
       )
     }
 
     // Create VALD ForceDecks API instance
-    const valdAPI = new SimpleVALDForceDecksAPI(region)
+    const valdAPI = new SimpleVALDForceDecksAPI()
 
     // Get tests using the simplified API
     const testsResponse = await valdAPI.getTests(modifiedFromUtc, profileId || undefined)

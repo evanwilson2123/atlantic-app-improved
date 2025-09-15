@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   // Only show environment variable names, not values for security
   const envVars = {
     VALD_CLIENT_ID: !!process.env.VALD_CLIENT_ID,
