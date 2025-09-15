@@ -65,14 +65,10 @@ export class SimpleVALDForceDecksAPI {
   private accessToken: string | null = null
   private tokenExpiry: number | null = null
 
-  constructor(region: string) {
-    const regions = {
-      'Australia (East)': 'https://prd-aue-api-extforcedecks.valdperformance.com',
-      'United States (East)': 'https://prd-use-api-extforcedecks.valdperformance.com',
-      'Europe (West)': 'https://prd-euw-api-extforcedecks.valdperformance.com',
-    }
+  constructor() {
+    const baseUrl = 'https://prd-use-api-extforcedecks.valdperformance.com';
     
-    this.baseUrl = regions[region as keyof typeof regions]
+    this.baseUrl = baseUrl
     this.clientId = process.env.VALD_CLIENT_ID || ''
     this.clientSecret = process.env.VALD_CLIENT_SECRET || ''
     this.tenantId = process.env.VALD_TENANT_ID || ''
@@ -412,5 +408,5 @@ export class SimpleVALDForceDecksAPI {
 }
 
 // Export singleton instance
-export const simpleVALDForceDecksAPI = new SimpleVALDForceDecksAPI('United States (East)')
+export const simpleVALDForceDecksAPI = new SimpleVALDForceDecksAPI();
 export default simpleVALDForceDecksAPI

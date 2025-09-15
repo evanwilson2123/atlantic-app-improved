@@ -172,8 +172,17 @@ export class ValdProfileApi {
             if (response.statusCode < 200 || response.statusCode >= 300) {
                 throw new Error(`Failed to get athlete: ${response.message}`);
             }
-            const profileId = (response.data as GetAthleteResponse).profiles[0].profileId;
-            return profileId;
+            // Verbose logging of raw payload
+            console.log('VALD profiles raw payload:', JSON.stringify(response.data));
+            const data = response.data as GetAthleteResponse | null;
+            const profiles = data?.profiles ?? [];
+            if (!Array.isArray(profiles) || profiles.length === 0) {
+                console.warn('No profiles found yet for syncId:', syncId);
+                return null;
+            }
+            const profileId = profiles[0]?.profileId;
+            console.log('Resolved profileId:', profileId);
+            return profileId ?? null;
         } catch (error) {
             console.error('❌ Error getting athlete:', error instanceof Error ? error.message : 'Unknown error');
             throw error;

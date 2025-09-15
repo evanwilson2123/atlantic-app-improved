@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create VALD ForceDecks API instance
-    const valdAPI = new SimpleVALDForceDecksAPI(region)
+    const valdAPI = new SimpleVALDForceDecksAPI()
 
     // Run the sync process
     const syncResult = await valdAPI.syncRecentTests(daysBack, profileId)
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Create VALD ForceDecks API instance
-    const valdAPI = new SimpleVALDForceDecksAPI(region)
+    const valdAPI = new SimpleVALDForceDecksAPI()
 
     // Test the connection
     const testResult = await valdAPI.testConnection()

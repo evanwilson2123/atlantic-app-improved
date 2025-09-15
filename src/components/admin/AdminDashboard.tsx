@@ -2,11 +2,13 @@
 
 import React, { useEffect, useState } from 'react'
 import { Athlete } from '@/types/types'
+import { useRouter } from 'next/navigation';
 
 const AdminDashboard = () => {
     const [athletes, setAthletes] = useState<Athlete[]>([])
     const [loading, setLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | null>(null)
+    const router = useRouter();
 
     function formatDate(value?: string | Date) {
       if (!value) return '-'
@@ -151,7 +153,10 @@ const AdminDashboard = () => {
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-800">
                 {athletes.map((a) => (
-                  <tr key={a.id ?? a.profileId ?? a.externalId} className="hover:bg-gray-50 dark:hover:bg-gray-900/40">
+                  <tr 
+                  key={a.id ?? a.profileId ?? a.externalId} 
+                  className="hover:bg-gray-50 dark:hover:bg-gray-900/40 cursor-pointer" 
+                  onClick={() =>router.push(`/admin/athlete/${a.id}/vald/${a.profileId}`)}>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                       {(a.firstName || '') + ' ' + (a.lastName || '')}
                     </td>

@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
                 lastName,
                 sex,
                 externalId,
-                profileId,
+                profileId: profileId ?? "",
                 syncId,
                 syncedAt: new Date(),
                 activeStatus: true,
