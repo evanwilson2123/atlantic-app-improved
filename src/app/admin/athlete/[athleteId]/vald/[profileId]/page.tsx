@@ -1,49 +1,17 @@
 'use client'
-import { VALDTest } from '@/lib/forcedecks-api';
-import { useParams } from 'next/navigation';
-import React, { useEffect, useState } from 'react'
+import React from 'react'
+import TestsList from '@/components/vald/TestsList'
 
 export default function Page() {
-    const params = useParams() as { athleteId: string; profileId: string }
-    const athleteId = params?.athleteId
-    const profileId = params?.profileId
-    const [tests, setTests] = useState<VALDTest[]>([])
-    const [loading, setLoading] = useState<boolean>(true)
-    const [error, setError] = useState<string | null>(null)
-
-    useEffect(() => {
-        const fetchTests = async () => {
-            try {
-                if (!profileId) return
-                const res = await fetch(`/api/vald?profileId=${profileId}`)
-                if (!res.ok) throw new Error('Failed to fetch tests')
-                const data = await res.json()
-                setTests(data.tests ?? [])
-            } catch (e: unknown) {
-                setError(e instanceof Error ? e.message : 'Unknown error')
-            } finally {
-                setLoading(false)
-            }
-        }
-        fetchTests()
-    }, [athleteId, profileId])
-
-    return (
-      <div className="mx-auto max-w-5xl px-4 py-6">
-        <h1 className="text-xl font-semibold mb-4">VALD Tests</h1>
-        {loading && <div>Loading...</div>}
-        {error && <div className="text-red-600">{error}</div>}
-        {!loading && !error && (
-          <div className="grid gap-3">
-            {tests.map((t) => (
-              <div key={t.testId} className="rounded-lg border border-gray-200 dark:border-gray-800 p-4">
-                <div className="font-medium">{t.testType}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">Recorded: {new Date(t.recordedDateUtc).toLocaleString()}</div>
-              </div>
-            ))}
-            {tests.length === 0 && <div>No tests found.</div>}
-          </div>
-        )}
+  return (
+    <div className="relative min-h-screen bg-gradient-to-b from-slate-50 via-white to-sky-50 dark:from-gray-950 dark:via-gray-950 dark:to-gray-900">
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute -top-24 right-1/2 h-64 w-64 rounded-full bg-gradient-to-tr from-sky-400/20 to-indigo-400/20 blur-3xl" />
+        <div className="absolute top-40 -left-24 h-72 w-72 rounded-full bg-gradient-to-tr from-cyan-400/20 to-blue-400/20 blur-3xl" />
       </div>
-    )
+      <main className="mx-auto max-w-6xl px-4 py-10 sm:py-14">
+        <TestsList />
+      </main>
+    </div>
+  )
 }
