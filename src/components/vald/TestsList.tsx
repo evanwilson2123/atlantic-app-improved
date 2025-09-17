@@ -61,7 +61,7 @@ export default function TestsList() {
             {tests.length > 0 && tests.map((t) => (
               <button
                 key={t.testId}
-                onClick={() => setExpandedId(expandedId === t.testId ? null : t.testId)}
+                onClick={() => router.push(`/admin/athlete/${athleteId}/vald/${profileId}/test/${t.testId}`)}
                 className="text-left rounded-lg border border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
               >
                 <div className="flex items-center justify-between">
