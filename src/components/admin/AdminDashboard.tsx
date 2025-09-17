@@ -93,6 +93,7 @@ const AdminDashboard = () => {
               <div
                 key={a.id ?? a.profileId ?? a.externalId}
                 className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm"
+                onClick={() => router.push(`/admin/athlete/${a.id}/vald/${a.profileId}`)}
               >
                 {/* Header */}
                 <div className="flex items-center gap-3">
