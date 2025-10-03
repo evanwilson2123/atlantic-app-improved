@@ -93,7 +93,7 @@ const AdminDashboard = () => {
               <div
                 key={a.id ?? a.profileId ?? a.externalId}
                 className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm"
-                onClick={() => router.push(`/admin/athlete/${a.id}/vald/${a.profileId}`)}
+                onClick={() => router.push(`/admin/athlete/${a.id}/profile`)}
               >
                 {/* Header */}
                 <div className="flex items-center gap-3">
@@ -157,7 +157,7 @@ const AdminDashboard = () => {
                   <tr 
                   key={a.id ?? a.profileId ?? a.externalId} 
                   className="hover:bg-gray-50 dark:hover:bg-gray-900/40 cursor-pointer" 
-                  onClick={() =>router.push(`/admin/athlete/${a.id}/vald/${a.profileId}`)}>
+                  onClick={() =>router.push(`/admin/athlete/${a.id}/profile`)}>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                       {(a.firstName || '') + ' ' + (a.lastName || '')}
                     </td>

@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "public"."SJTest" ADD COLUMN     "RSI_MODIFIED_IMP_MOM_trial_unit" TEXT,
+ADD COLUMN     "RSI_MODIFIED_IMP_MOM_trial_value" DOUBLE PRECISION;

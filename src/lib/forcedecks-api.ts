@@ -1,5 +1,6 @@
 // Simplified VALD ForceDecks API Integration - Focus on core data flow
 // Gets: VALD Tests → Trials → Metrics (following the same pattern as your vald-api-simple.js)
+import { Trial } from "@/types/types"
 
 export interface VALDTest {
   testId: string
@@ -225,11 +226,11 @@ export class SimpleVALDForceDecksAPI {
   /**
    * Get trials for a specific test (Scenario 2)
    */
-  async getTrials(testId: string): Promise<VALDTrial[]> {
+  async getTrials(testId: string): Promise<Trial[]> {
     try {
       console.log(`📋 Fetching trials for test ${testId}...`)
       
-      const response = await this.makeRequest<VALDTrial[]>(`/v2019q3/teams/${this.tenantId}/tests/${testId}/trials`)
+      const response = await this.makeRequest<Trial[]>(`/v2019q3/teams/${this.tenantId}/tests/${testId}/trials`)
       console.log(`📊 Found ${response?.length || 0} trials`)
       
       return response || []

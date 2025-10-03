@@ -2,6 +2,37 @@
 import React, { useState } from 'react'
 import { useParams } from 'next/navigation'
 
+interface ResultDefinition {
+  id: string,
+  result: string,
+  description: string,
+  name: string,
+  unit: string,
+  repeatable: boolean,
+  asymmetry: boolean,
+}
+
+interface Result {
+  resultId: string,
+  value: number,
+  time: number,
+  limb: string,
+  repeat: number,
+  definition: ResultDefinition
+}
+
+interface Trial {
+  id: string,
+  athleteId: string,
+  hubAthleteId: string,
+  recordedUTC: string,
+  recordedOffset: number,
+  recordedTimeZone: string,
+  startTime: number,
+  endTime: number,
+  results: Result[]
+}
+
 export default function Page() {
   const params = useParams() as { athleteId: string; profileId: string; testId: string }
   const { athleteId, profileId, testId } = params
@@ -12,10 +43,11 @@ export default function Page() {
 
   // Replace this function body with your custom fetch logic.
   // You have access to athleteId, profileId, testId above if needed.
-  async function userFetch(): Promise<unknown> {
+  async function userFetch(): Promise<Trial[]> {
     const res = await fetch(`/api/vald/test/${testId}`)
     if (!res.ok) throw new Error('Request failed')
-    return await res.json()
+    const data = await res.json()
+    return data.test
   }
 
   async function runFetch() {
@@ -23,8 +55,11 @@ export default function Page() {
     setError(null)
     setResult(null)
     try {
-      const data = await userFetch()
-      setResult(data)
+      const data: Trial[] = await userFetch()
+      console.log(data.length);
+      const test = data[0];
+      console.log(`${test.results?.length} results`)
+      setResult(test);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Unknown error')
     } finally {

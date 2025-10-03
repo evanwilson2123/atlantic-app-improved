@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "public"."SJTest" ADD COLUMN     "BM_REL_ABS_CON_IMPULSE_trial_unit" TEXT,
+ADD COLUMN     "BM_REL_ABS_CON_IMPULSE_trial_value" DOUBLE PRECISION;

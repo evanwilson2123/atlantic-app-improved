@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "public"."SJTest" ADD COLUMN     "CON_P2_CON_P1_IMPULSE_RATIO_trial_unit" TEXT,
+ADD COLUMN     "CON_P2_CON_P1_IMPULSE_RATIO_trial_value" DOUBLE PRECISION;
