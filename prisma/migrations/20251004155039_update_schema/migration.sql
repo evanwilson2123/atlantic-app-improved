@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "public"."IMTPTest" ADD COLUMN     "RELATIVE_STRENGTH_trial_unit" TEXT,
+ADD COLUMN     "RELATIVE_STRENGTH_trial_value" DOUBLE PRECISION;

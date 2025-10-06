@@ -1,7 +1,7 @@
 import { Trial } from "@/types/types"
 import { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/db"
-import { v4 as uuidv4 } from "uuid"
+import { SimpleVALDForceDecksAPI } from "./forcedecks-api";
 
 interface countMap {
     count: number;
@@ -9,9 +9,8 @@ interface countMap {
     value: any;
 }
 
-export async function storeCMJTest(tests: Trial[]): Promise<boolean> {
+export async function storeCMJTest(tests: Trial[], testId: string): Promise<boolean> {
     const data: Prisma.CMJTestCreateInput[] = [];
-    const testId = uuidv4();
     try {
         for (const trial of tests) {
             const trialData: Prisma.CMJTestCreateInput = {
@@ -38,9 +37,8 @@ export async function storeCMJTest(tests: Trial[]): Promise<boolean> {
     }
 }
 
-export async function storeSJTest(tests: Trial[]): Promise<boolean> {
+export async function storeSJTest(tests: Trial[], testId: string): Promise<boolean> {
     const data: Prisma.SJTestCreateInput[] = []
-    const testId = uuidv4();
     try {
         for (const trial of tests) {
             const trialData: Prisma.SJTestCreateInput = {
@@ -67,9 +65,8 @@ export async function storeSJTest(tests: Trial[]): Promise<boolean> {
     }
 }
 
-export async function storeHJTest(tests: Trial[]): Promise<boolean> {
+export async function storeHJTest(tests: Trial[], testId: string): Promise<boolean> {
     const data: Prisma.HJTestCreateInput[] = [];
-    const testId = uuidv4();
     const averageMap: Map<string, countMap> = new Map(); 
     try {
         for (const trial of tests) {
@@ -122,9 +119,8 @@ export async function storeHJTest(tests: Trial[]): Promise<boolean> {
     }
 }
 
-export async function storePPUTest(tests: Trial[]): Promise<boolean> {
+export async function storePPUTest(tests: Trial[], testId: string): Promise<boolean> {
     const data: Prisma.PPUTestCreateInput[] = [];
-    const testId = uuidv4();
     try {
         for (const trial of tests) {
             const trialData: Prisma.PPUTestCreateInput = {
@@ -151,9 +147,15 @@ export async function storePPUTest(tests: Trial[]): Promise<boolean> {
     }
 }
 
-export async function storeIMTPTest(tests: Trial[]): Promise<boolean> {
+export async function storeIMTPTest(tests: Trial[], testId: string): Promise<boolean> {
     const data: Prisma.IMTPTestCreateInput[] = [];
-    const testId = uuidv4();
+    const valdForceDecksAPI = new SimpleVALDForceDecksAPI();
+    const valdTest = await valdForceDecksAPI.getTest(testId, tests[0].athleteId);
+    if (!valdTest || typeof valdTest.weight !== "number") {
+        console.error(`Body weight not found for test ${testId}`);
+        return false;
+    }
+    const bodyWeightN = valdTest.weight * 9.81;
     try {
         for (const trial of tests) {
             const trialData: Prisma.IMTPTestCreateInput = {
@@ -171,6 +173,18 @@ export async function storeIMTPTest(tests: Trial[]): Promise<boolean> {
                 ;(trialData as Record<string, unknown>)[valueKey] = result.value;
                 ;(trialData as Record<string, unknown>)[unitKey] = result.definition.unit;
             }
+        }
+        for (const trial of data) {
+            const netPeakVerticalForce = (trial.PEAK_VERTICAL_FORCE_trial_value as number) - bodyWeightN;
+            const relativeStrength = netPeakVerticalForce / bodyWeightN;
+            const netPeakVerticalForceValueKey = "NET_PEAK_VERTICAL_FORCE_trial_value";
+            const netPeakVerticalForceUnitKey = "NET_PEAK_VERTICAL_FORCE_trial_unit";
+            const relativeStrengthValueKey = "RELATIVE_STRENGTH_trial_value";
+            const relativeStrengthUnitKey = "RELATIVE_STRENGTH_trial_unit";
+            ;(trial as Record<string, unknown>)[netPeakVerticalForceValueKey] = netPeakVerticalForce;
+            ;(trial as Record<string, unknown>)[relativeStrengthValueKey] = relativeStrength;
+            ;(trial as Record<string, unknown>)[netPeakVerticalForceUnitKey] = "N";
+            ;(trial as Record<string, unknown>)[relativeStrengthUnitKey] = "N";
         }
         await prisma.iMTPTest.createMany({ data });
         return true;

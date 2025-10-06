@@ -55,6 +55,27 @@ const ValdProfile = () => {
         }
         fetchValdProfile();
     }, [profileId]);
+
+    const syncTests = async () => {
+        const response = await fetch(`/api/athletes/vald/${profileId}/sync-tests`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        });
+        if (!response.ok) {
+            console.error("Failed to sync tests", response.statusText);
+            setError(response.statusText);
+            return;
+        }
+        const data = await response.json();
+        if (data.success) {
+            console.log("Tests synced successfully");
+        } else {
+            console.error("Failed to sync tests", data.error);
+            setError(data.error);
+        }
+    }
   return (
     <div className="space-y-5">
         <AthleteNavbar athleteId={athleteId as string} profileId={profileId as string} />
@@ -62,7 +83,13 @@ const ValdProfile = () => {
         <div className="rounded-2xl border border-gray-200/70 dark:border-gray-800 bg-gradient-to-r from-indigo-50 via-blue-50 to-sky-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-900 p-5 sm:p-6 shadow-sm">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Vald Profile</h1>
-                {/* latest tests toggle with toggle switch */}
+                {/* sync tests button */}
+                <button
+                    onClick={() => syncTests()}
+                    className="inline-flex items-center rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+                >
+                    Sync Tests
+                </button>
             </div>
         </div>
 

@@ -1425,7 +1425,7 @@ model IMTPTest {
   recordedTimeZone String
   testId String
   createdAt DateTime @default(now())
-    BASELINE_FORCE_asymm_unit String?
+  BASELINE_FORCE_asymm_unit String?
   BASELINE_FORCE_asymm_value Float?
   BASELINE_FORCE_left_unit String?
   BASELINE_FORCE_left_value Float?
@@ -1697,6 +1697,8 @@ model IMTPTest {
   START_TO_PEAK_FORCE_right_value Float?
   START_TO_PEAK_FORCE_trial_unit String?
   START_TO_PEAK_FORCE_trial_value Float?
+  RELATIVE_STRENGTH_trial_unit String?
+  RELATIVE_STRENGTH_trial_value Float?
 }
 
 

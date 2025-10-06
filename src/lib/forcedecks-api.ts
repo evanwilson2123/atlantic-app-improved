@@ -198,9 +198,13 @@ export class SimpleVALDForceDecksAPI {
   /**
    * Get tests for the tenant (Scenario 1)
    */
-  async getTests(modifiedFromUtc: string, profileId?: string): Promise<{ tests: VALDTest[] }> {
+  async getTests(modifiedFromUtc?: string, profileId?: string): Promise<{ tests: VALDTest[] }> {
     try {
       console.log(`📋 Fetching tests for tenant ${this.tenantId} since ${modifiedFromUtc}...`)
+
+      if (!modifiedFromUtc) {
+        modifiedFromUtc = new Date(0).toISOString()
+      }
       
       const queryParams = new URLSearchParams({
         TenantId: this.tenantId,
@@ -219,6 +223,29 @@ export class SimpleVALDForceDecksAPI {
       console.log('❌ Error fetching tests:', error instanceof Error ? error.message : 'Unknown error')
       console.log(JSON.stringify(error, null, 2))
       
+      throw error
+    }
+  }
+
+  /**
+   * Get all tests for a profile after a certain date
+   */
+  async getUnsyncedTests(profileId: string, modifiedFromUtc: string): Promise<VALDTest[]> {
+    try {
+      console.log(`📋 Fetching unsynced tests for profile ${profileId} after ${modifiedFromUtc}...`)
+      
+      const queryParams = new URLSearchParams({
+        TenantId: this.tenantId,
+        ProfileId: profileId,
+        ModifiedFromUtc: modifiedFromUtc,
+      })
+
+      const response = await this.makeRequest<VALDTest[]>(`/tests?${queryParams.toString()}`)
+      console.log(`📊 Found ${response?.length || 0} unsynced tests`)
+      
+      return response || [];
+    } catch (error) {
+      console.error('❌ Error fetching unsynced tests:', error instanceof Error ? error.message : 'Unknown error')
       throw error
     }
   }
@@ -262,6 +289,19 @@ export class SimpleVALDForceDecksAPI {
       return response
     } catch (error) {
       console.error('❌ Error fetching test recording:', error instanceof Error ? error.message : 'Unknown error')
+      throw error
+    }
+  }
+
+  async getTest(testId: string, profileId: string): Promise<VALDTest | undefined> {
+    try {
+      console.log(`📋 Fetching test ${testId} for profile ${profileId}...`)
+      // Provide a valid ISO date for ModifiedFromUtc and scope to profileId
+      const from = new Date(0).toISOString();
+      const response = await this.getTests(from, profileId);
+      return response?.tests?.find(test => test.testId === testId) || undefined;
+    } catch (error) {
+      console.error('❌ Error fetching test:', error instanceof Error ? error.message : 'Unknown error')
       throw error
     }
   }
