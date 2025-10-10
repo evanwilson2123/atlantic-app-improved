@@ -34,9 +34,6 @@ export async function POST(req: NextRequest) {
         console.log('status', status);
         const profileId = await valdProfileApi.getAthlete(syncId);
         console.log('profileId', profileId);
-        if (!profileId) {
-            return NextResponse.json({ error: "Failed to create athlete" }, { status: 500 });
-        }
         const created = await prisma.athlete.create({
             data: {
                 dob: new Date(dob),

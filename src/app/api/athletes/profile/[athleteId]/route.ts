@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { ValdProfileApi } from "@/lib/valdProfileApi";
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -22,6 +23,23 @@ export async function GET(req: NextRequest, context: { params: Promise<{ athlete
         if (!athlete) {
             console.error("Athlete not found");
             return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+        }
+        if (athlete.profileId === "") {
+            const valdProfileApi = new ValdProfileApi();
+            const profileId = await valdProfileApi.getAthlete(athlete.syncId);
+            if (!profileId) {
+                console.error("Failed to get profileId");
+                return NextResponse.json({ error: "Failed to get profileId" }, { status: 500 });
+            }
+            athlete.profileId = profileId;
+            await prisma.athlete.update({
+                where: {
+                    id: parseInt(athleteId),
+                },
+                data: {
+                    profileId: profileId,
+                },
+            });
         }
         return NextResponse.json({ athlete }, { status: 200 });
 
