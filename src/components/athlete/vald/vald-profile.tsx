@@ -80,13 +80,13 @@ const ValdProfile = () => {
     <div className="space-y-5">
         <AthleteNavbar athleteId={athleteId as string} profileId={profileId as string} />
         {/* Header */}
-        <div className="rounded-2xl border border-gray-200/70 dark:border-gray-800 bg-gradient-to-r from-indigo-50 via-blue-50 to-sky-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-900 p-5 sm:p-6 shadow-sm">
+        <div className="rounded-2xl border border-gray-800 bg-black p-5 sm:p-6 shadow-sm">
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Vald Profile</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">Vald Profile</h1>
                 {/* sync tests button */}
                 <button
                     onClick={() => syncTests()}
-                    className="inline-flex items-center rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    className="inline-flex items-center rounded-lg border border-gray-700 bg-gray-900 px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-200 hover:bg-gray-800"
                 >
                     Sync Tests
                 </button>
@@ -95,18 +95,18 @@ const ValdProfile = () => {
 
         {/* States */}
         {loading && (
-            <div className="rounded-lg border border-gray-200 dark:border-gray-800 p-6 text-center text-gray-600 dark:text-gray-300">
+            <div className="rounded-lg border border-gray-800 bg-black p-6 text-center text-gray-300">
                 Loading profile...
             </div>
         )}
         {error && (
-            <div className="rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20 p-4 text-sm text-red-800 dark:text-red-200">
+            <div className="rounded-lg border border-red-900 bg-red-900/20 p-4 text-sm text-red-200">
                 {error}
             </div>
         )}
 
         {/* Tests Grid */}
-        {!loading && !error && testTypes && (
+        {/* {!loading && !error && testTypes && (
             <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 sm:p-6 shadow-sm">
                 <h2 className="text-lg font-semibold mb-4">Latest Tests</h2>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -124,7 +124,7 @@ const ValdProfile = () => {
                     ))}
                 </div>
             </div>
-        )}
+        )} */}
     </div>
   )
 }

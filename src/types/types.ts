@@ -49,3 +49,12 @@ export interface Trial {
 }
 
 export type CMJTest = PrismaCMJTest
+
+export interface HighPerformanceCompositeScore {
+    impt_net_peak_vertical_force: number; //  NET_PEAK_VERTICAL_FORCE_trial_value Float?
+    relative_strength_imtp: number; //  RELATIVE_STRENGTH_trial_value Float?
+    peak_power_ppu: number; //   PEAK_TAKEOFF_FORCE_trial_value Float?
+    sj_peak_power_w: number; //   PEAK_TAKEOFF_POWER_trial_value Float?
+    sj_peak_power_w_bw: number; //   BODYMASS_RELATIVE_MEAN_CONCENTRIC_POWER_trial_value Float?
+    reactive_strength_index_hj: number; //  HOP_MEAN_RSI_trial_value Float?
+}

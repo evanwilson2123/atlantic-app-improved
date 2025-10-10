@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     const region = searchParams.get('region')
     
     const body = await request.json()
-    const { daysBack = 7, profileId } = body
+    const { daysBack = 1000, profileId } = body
 
     if (!region) {
       return NextResponse.json(

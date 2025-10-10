@@ -110,7 +110,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ profil
                     await storeHJTest(trials, test.testId);
                     break;
                 }
-                case "PP": {
+                case "PPU": {
                     const trials = await valdForceDecksAPI.getTrials(test.testId);
                     await storePPUTest(trials, test.testId);
                     break;

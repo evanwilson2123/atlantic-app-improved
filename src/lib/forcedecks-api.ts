@@ -375,7 +375,7 @@ export class SimpleVALDForceDecksAPI {
   /**
    * Main sync function - gets recent tests and processes them
    */
-  async syncRecentTests(daysBack: number = 7, profileId?: string) {
+  async syncRecentTests(daysBack: number = 1000, profileId?: string) {
     try {
       console.log(`🚀 Starting VALD ForceDecks sync (${daysBack} days back)...`)
       
@@ -396,6 +396,7 @@ export class SimpleVALDForceDecksAPI {
       // Process each test
       for (const test of tests) {
         try {
+          console.log(`📋 Test Type: ${test.testType}`)
           const processedTest = await this.processVALDTest(test)
           processedTests.push(processedTest)
           processedCount++
