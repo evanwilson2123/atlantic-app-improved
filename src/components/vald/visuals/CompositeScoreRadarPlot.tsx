@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
+import Loading from '@/components/utils/Loading'
 
 type PercentilesResponse = {
   impt_net_peak_vertical_force: number
@@ -63,7 +64,8 @@ function radarColors(percent: number) {
 
 const CompositeScoreRadarPlot = () => {
   const [data, setData] = useState<PercentilesResponse | null>(null)
-  const { athleteId, profileId } = useParams<{ athleteId: string, profileId: string }>()
+  const { athleteId, profileId } = useParams<{ athleteId: string, profileId: string }>();
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -76,6 +78,8 @@ const CompositeScoreRadarPlot = () => {
         setData(json)
       } catch (err) {
         console.error('Error fetching composite radar data', err)
+      } finally {
+        setLoading(false);
       }
     }
     if (athleteId) fetchData()
@@ -107,6 +111,8 @@ const CompositeScoreRadarPlot = () => {
       return { x1: cx, y1: cy, x2: x, y2: y, angle }
     })
   }, [cx, cy, maxR])
+
+  if (loading) return <Loading />;
 
   return (
     <div className="w-full max-w-3xl mx-auto">
