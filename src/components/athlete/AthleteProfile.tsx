@@ -29,6 +29,27 @@ const AthleteProfile = () => {
         return (a + b) || 'A'
     }
 
+    function handleTechClick(key: keyof LatestTechsResponse) {
+        const profileId = athlete?.profileId ?? ''
+        const id = String(athleteId ?? '')
+        let path = ''
+        switch (key) {
+            case 'vald':
+                path = `/admin/athlete/${id}/vald/${profileId}`
+                break
+            case 'blast':
+                path = `/admin/athlete/${id}/blast/${profileId}`
+                break
+            case 'trackman':
+                path = `/admin/athlete/${id}/trackman/${profileId}`
+                break
+            case 'hittrax':
+                path = `/admin/athlete/${id}/hittrax/${profileId}`
+                break
+        }
+        if (path) router.push(path)
+    }
+
     // fetch the athlete
     useEffect(() => {
         const fetchAthlete = async () => {
@@ -57,7 +78,7 @@ const AthleteProfile = () => {
     }, [athleteId]);
   return (
     <div className="space-y-5">
-        <AthleteNavbar athleteId={athleteId as string} profileId={athlete?.profileId ?? ''} />
+        {/* <AthleteNavbar athleteId={athleteId as string} profileId={athlete?.profileId ?? ''} /> */}
         {/* Header */}
         <div className="rounded-2xl border border-gray-800 bg-black p-5 sm:p-6 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
@@ -134,6 +155,7 @@ const AthleteProfile = () => {
                             type="button"
                             aria-label={`${label} latest test`}
                             className="group relative overflow-hidden rounded-lg border border-gray-800 bg-white/5 p-3 text-left shadow-none sm:shadow-sm transition hover:border-sky-700 hover:bg-white/10 focus:outline-none focus:ring-1 focus:ring-sky-600/40"
+                            onClick={() => handleTechClick(key)}
                         >
                             <div className="text-sm sm:text-base font-medium text-white">{label}</div>
                             <div className="mt-0.5 text-xs sm:text-sm text-gray-400 leading-snug">

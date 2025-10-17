@@ -1,7 +1,8 @@
 "use client";
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import AthleteNavbar from '../AthleteNavbar';
+import { ArrowLeftIcon } from 'lucide-react';
 
 interface TestType {
     type: "CMJ" | "SJ" | "HJ" | "PP" | "IMTP";
@@ -28,6 +29,7 @@ function isValidTest(test: TestType | null | undefined): test is TestType {
 
 const ValdProfile = () => {
     const { athleteId, profileId } = useParams<{ athleteId: string; profileId: string }>();
+    const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [testTypes, setTestTypes] = useState<ValdProfileResponse | null>(null);
@@ -78,12 +80,22 @@ const ValdProfile = () => {
     }
   return (
     <div className="space-y-5">
-        <AthleteNavbar athleteId={athleteId as string} profileId={profileId as string} />
+        {/* <AthleteNavbar athleteId={athleteId as string} profileId={profileId as string} /> */}
         {/* Header */}
         <div className="rounded-2xl border border-gray-800 bg-black p-5 sm:p-6 shadow-sm">
+            {/* Back to profile button */}
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">Vald Profile</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">Forceplates</h1>
+            </div>
+            <div className="flex items-center gap-2 pt-4">
                 {/* sync tests button */}
+                <button
+                    onClick={() => router.back()}
+                    className="inline-flex items-center rounded-lg border border-gray-700 bg-gray-900 px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-200 hover:bg-gray-800"
+                >
+                    <ArrowLeftIcon className="w-4 h-4" />
+                    Back to athlete
+                </button>
                 <button
                     onClick={() => syncTests()}
                     className="inline-flex items-center rounded-lg border border-gray-700 bg-gray-900 px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-200 hover:bg-gray-800"
