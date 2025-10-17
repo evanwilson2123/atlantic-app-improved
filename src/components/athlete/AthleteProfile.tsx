@@ -1,5 +1,5 @@
 "use client";
-import { Athlete } from '@/types/types';
+import { Athlete, LatestTechsResponse } from '@/types/types';
 import { useParams, useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react'
 import AthleteNavbar from './AthleteNavbar';
@@ -12,12 +12,14 @@ const AthleteProfile = () => {
     // set states
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    // data states
     const [athlete, setAthlete] = useState<Athlete | null>(null);
+    const [latestTechs, setLatestTechs] = useState<LatestTechsResponse | null>(null);
 
-    function formatDate(value?: string | Date) {
-        if (!value) return '-'
+    function formatDateLabel(value?: string | Date) {
+        if (!value) return '—'
         const d = new Date(value)
-        if (isNaN(d.getTime())) return '-'
+        if (isNaN(d.getTime())) return '—'
         return d.toLocaleDateString()
     }
 
@@ -31,16 +33,20 @@ const AthleteProfile = () => {
     useEffect(() => {
         const fetchAthlete = async () => {
             try {
-                /**
-                 * THIS IS A FILLER FOR THE TIME BEING
-                 */
-                const response = await fetch(`/api/athletes/profile/${athleteId}`);
-                if (!response.ok) {
-                    throw new Error("Failed to fetch athlete");
+                // promise.all to fetch athlete and latest techs
+                const [athleteResponse, latestTechsResponse] = await Promise.all([
+                    fetch(`/api/athletes/profile/${athleteId}`),
+                    fetch(`/api/athletes/techs/${athleteId}/latest`),
+                ]);
+                if (!athleteResponse.ok || !latestTechsResponse.ok) {
+                    throw new Error("Failed to fetch athlete or latest techs");
                 }
-                const data = await response.json();
-                console.log(JSON.stringify(data, null, 2));
-                setAthlete(data.athlete);
+                const athleteData = await athleteResponse.json();
+                const latestTechsData = await latestTechsResponse.json();
+                console.log(JSON.stringify(athleteData, null, 2));
+                console.log(JSON.stringify(latestTechsData, null, 2));
+                setAthlete(athleteData.athlete);
+                setLatestTechs(latestTechsData.latestTechs);
             } catch (error) {
                 setError(error instanceof Error ? error.message : "An unknown error occurred");
             } finally {
@@ -112,45 +118,34 @@ const AthleteProfile = () => {
             </div>
         )}
 
-        {/* Details */}
-        {!loading && !error && athlete && (
-            <div className="rounded-xl border border-gray-800 bg-black p-5 sm:p-6 shadow-sm">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    <div className="rounded-lg bg-white/5 p-3 border border-gray-800">
-                        <div className="text-[11px] uppercase tracking-wide text-gray-400">DOB</div>
-                        <div className="mt-0.5 text-sm font-medium text-white">{formatDate(athlete.dob)}</div>
-                    </div>
-                    <div className="rounded-lg bg-white/5 p-3 border border-gray-800">
-                        <div className="text-[11px] uppercase tracking-wide text-gray-400">Sex</div>
-                        <div className="mt-0.5 text-sm font-medium text-white">{athlete.sex || '—'}</div>
-                    </div>
-                    <div className="rounded-lg bg-white/5 p-3 border border-gray-800">
-                        <div className="text-[11px] uppercase tracking-wide text-gray-400">Synced</div>
-                        <div className="mt-0.5 text-sm font-medium text-white">{formatDate(athlete.syncedAt)}</div>
-                    </div>
-                    <div className="rounded-lg bg-white/5 p-3 border border-gray-800">
-                        <div className="text-[11px] uppercase tracking-wide text-gray-400">External ID</div>
-                        <div className="mt-0.5 text-sm font-medium text-white break-all">{athlete.externalId || '—'}</div>
-                    </div>
-                    <div className="rounded-lg bg-white/5 p-3 border border-gray-800">
-                        <div className="text-[11px] uppercase tracking-wide text-gray-400">Profile ID</div>
-                        <div className="mt-0.5 text-sm font-medium text-white break-all">{athlete.profileId || '—'}</div>
-                    </div>
-                    <div className="rounded-lg bg-white/5 p-3 border border-gray-800">
-                        <div className="text-[11px] uppercase tracking-wide text-gray-400">Sync ID</div>
-                        <div className="mt-0.5 text-sm font-medium text-white break-all">{athlete.syncId || '—'}</div>
-                    </div>
-                    <div className="rounded-lg bg-white/5 p-3 border border-gray-800">
-                        <div className="text-[11px] uppercase tracking-wide text-gray-400">Created</div>
-                        <div className="mt-0.5 text-sm font-medium text-white">{formatDate(athlete.createdAt)}</div>
-                    </div>
-                    <div className="rounded-lg bg-white/5 p-3 border border-gray-800">
-                        <div className="text-[11px] uppercase tracking-wide text-gray-400">Updated</div>
-                        <div className="mt-0.5 text-sm font-medium text-white">{formatDate(athlete.updatedAt)}</div>
-                    </div>
+        {/* Latest tests by technology */}
+        {!loading && !error && latestTechs && (
+            <div className="rounded-xl border border-gray-800 bg-black p-4 sm:p-5 shadow-sm">
+                <div className="mb-2 text-xs font-semibold text-gray-300 uppercase tracking-wide">Latest tests</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+                    {([
+                        { key: 'vald', label: 'VALD' },
+                        { key: 'blast', label: 'Blast Motion' },
+                        { key: 'trackman', label: 'Trackman' },
+                        { key: 'hittrax', label: 'HitTrax' },
+                    ] as { key: keyof LatestTechsResponse; label: string }[]).map(({ key, label }) => (
+                        <button
+                            key={key}
+                            type="button"
+                            aria-label={`${label} latest test`}
+                            className="group relative overflow-hidden rounded-lg border border-gray-800 bg-white/5 p-3 text-left shadow-none sm:shadow-sm transition hover:border-sky-700 hover:bg-white/10 focus:outline-none focus:ring-1 focus:ring-sky-600/40"
+                        >
+                            <div className="text-sm sm:text-base font-medium text-white">{label}</div>
+                            <div className="mt-0.5 text-xs sm:text-sm text-gray-400 leading-snug">
+                                latest test: <span className="text-gray-300">{formatDateLabel(latestTechs[key])}</span>
+                            </div>
+                        </button>
+                    ))}
                 </div>
             </div>
         )}
+
+
     </div>
   )
 }

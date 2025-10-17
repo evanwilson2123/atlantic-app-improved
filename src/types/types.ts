@@ -58,3 +58,17 @@ export interface HighPerformanceCompositeScore {
     sj_peak_power_w_bw: number; //   BODYMASS_RELATIVE_MEAN_CONCENTRIC_POWER_trial_value Float?
     reactive_strength_index_hj: number; //  HOP_MEAN_RSI_trial_value Float?
 }
+
+export enum Tech {
+    FORCEPLATES = "FORCEPLATES",
+    BLASTMOTION = "BLASTMOTION",
+    HITTRAX = "HITTRAX",
+    TRACKMAN = "TRACKMAN",
+}
+
+export interface LatestTechsResponse {
+    vald: Date | undefined;
+    blast: Date | undefined;
+    trackman: Date | undefined;
+    hittrax: Date | undefined;
+}
