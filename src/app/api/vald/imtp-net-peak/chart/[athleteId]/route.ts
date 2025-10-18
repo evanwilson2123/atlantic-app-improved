@@ -22,6 +22,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ athlete
             select: {
                 recordedUTC: true,
                 NET_PEAK_VERTICAL_FORCE_trial_value: true,
+                RELATIVE_STRENGTH_trial_value: true,
             },
         });
         return NextResponse.json({ netPeakStats: imtpTests });

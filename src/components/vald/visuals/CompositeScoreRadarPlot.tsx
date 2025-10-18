@@ -114,6 +114,24 @@ const CompositeScoreRadarPlot = () => {
     })
   }, [cx, cy, maxR])
 
+  const getRoutePathForMetric = (metricKey: keyof PercentilesResponse): string | null => {
+    if (!profileId) return null
+    switch (metricKey) {
+      case 'impt_net_peak_vertical_force':
+      case 'relative_strength_imtp':
+        return `/athlete/imtp-net-peak/${profileId}`
+      case 'sj_peak_power_w_bw':
+      case 'sj_peak_power_w':
+        return `/athlete/sj/${profileId}`
+      case 'peak_power_ppu':
+        return `/athlete/ppu/${profileId}`
+      case 'reactive_strength_index_hj':
+        return `/athlete/hj/${profileId}`
+      default:
+        return null
+    }
+  }
+
   if (loading) return <Loading />;
 
   return (
@@ -216,7 +234,8 @@ const CompositeScoreRadarPlot = () => {
               return (
                 <div key={m.key as string} className={`relative rounded-xl border border-gray-800 bg-gradient-to-br ${grad} p-3 sm:p-4`}
                 onClick={() => {
-                  router.push(`/athlete/imtp-net-peak/${profileId}`);
+                  const path = getRoutePathForMetric(m.key)
+                  if (path) router.push(path)
                 }}
                 > 
                   <div className="flex items-center justify-between">
