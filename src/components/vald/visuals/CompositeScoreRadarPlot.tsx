@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Loading from '@/components/utils/Loading'
+import { useRouter } from 'next/navigation'
 
 type PercentilesResponse = {
   impt_net_peak_vertical_force: number
@@ -66,6 +67,7 @@ const CompositeScoreRadarPlot = () => {
   const [data, setData] = useState<PercentilesResponse | null>(null)
   const { athleteId, profileId } = useParams<{ athleteId: string, profileId: string }>();
   const [loading, setLoading] = useState<boolean>(true);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -212,7 +214,11 @@ const CompositeScoreRadarPlot = () => {
               const val = Math.max(0, Math.min(100, Number(data?.[m.key] ?? 0)))
               const grad = cardGradient(val)
               return (
-                <div key={m.key as string} className={`relative rounded-xl border border-gray-800 bg-gradient-to-br ${grad} p-3 sm:p-4`}> 
+                <div key={m.key as string} className={`relative rounded-xl border border-gray-800 bg-gradient-to-br ${grad} p-3 sm:p-4`}
+                onClick={() => {
+                  router.push(`/athlete/imtp-net-peak/${profileId}`);
+                }}
+                > 
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-sm font-medium text-white">{m.label}</div>

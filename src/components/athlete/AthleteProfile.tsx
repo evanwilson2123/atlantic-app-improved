@@ -2,8 +2,9 @@
 import { Athlete, LatestTechsResponse } from '@/types/types';
 import { useParams, useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react'
-import AthleteNavbar from './AthleteNavbar';
 
+// import AthleteNavbar from './AthleteNavbar';
+import CompositeScoreLineChart from '@/components/vald/visuals/CompositeScoreLineChart';
 const AthleteProfile = () => {
     // mount hooks
     const { athleteId } = useParams();
@@ -23,32 +24,38 @@ const AthleteProfile = () => {
         return d.toLocaleDateString()
     }
 
+    function formatCompositeScore(value?: number) {
+        if (value === null || value === undefined) return '—'
+        const n = Number(value)
+        if (Number.isNaN(n)) return '—'
+        return n.toFixed(1)
+    }
+
+    function clampToRange(value: number, min: number, max: number) {
+        return Math.min(Math.max(value, min), max)
+    }
+
+    function getCompositePercent(raw?: number) {
+        // Assume score in [0,100]; clamp and convert to [0,1]
+        if (raw === null || raw === undefined) return 0
+        const clamped = clampToRange(Number(raw), 0, 100)
+        if (Number.isNaN(clamped)) return 0
+        return clamped / 100
+    }
+
+    function getCompositeColor(percent: number) {
+        // Map 0 -> red (0deg), 1 -> green (120deg)
+        const hue = 120 * clampToRange(percent, 0, 1)
+        return `hsl(${hue} 80% 50%)`
+    }
+
     function initials(nameA?: string, nameB?: string) {
         const a = (nameA?.[0] ?? '').toUpperCase()
         const b = (nameB?.[0] ?? '').toUpperCase()
         return (a + b) || 'A'
     }
 
-    function handleTechClick(key: keyof LatestTechsResponse) {
-        const profileId = athlete?.profileId ?? ''
-        const id = String(athleteId ?? '')
-        let path = ''
-        switch (key) {
-            case 'vald':
-                path = `/admin/athlete/${id}/vald/${profileId}`
-                break
-            case 'blast':
-                path = `/admin/athlete/${id}/blast/${profileId}`
-                break
-            case 'trackman':
-                path = `/admin/athlete/${id}/trackman/${profileId}`
-                break
-            case 'hittrax':
-                path = `/admin/athlete/${id}/hittrax/${profileId}`
-                break
-        }
-        if (path) router.push(path)
-    }
+    
 
     // fetch the athlete
     useEffect(() => {
@@ -139,33 +146,81 @@ const AthleteProfile = () => {
             </div>
         )}
 
-        {/* Latest tests by technology */}
-        {!loading && !error && latestTechs && (
-            <div className="rounded-xl border border-gray-800 bg-black p-4 sm:p-5 shadow-sm">
-                <div className="mb-2 text-xs font-semibold text-gray-300 uppercase tracking-wide">Latest tests</div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
-                    {([
-                        { key: 'vald', label: 'VALD' },
-                        { key: 'blast', label: 'Blast Motion' },
-                        { key: 'trackman', label: 'Trackman' },
-                        { key: 'hittrax', label: 'HitTrax' },
-                    ] as { key: keyof LatestTechsResponse; label: string }[]).map(({ key, label }) => (
-                        <button
-                            key={key}
-                            type="button"
-                            aria-label={`${label} latest test`}
-                            className="group relative overflow-hidden rounded-lg border border-gray-800 bg-white/5 p-3 text-left shadow-none sm:shadow-sm transition hover:border-sky-700 hover:bg-white/10 focus:outline-none focus:ring-1 focus:ring-sky-600/40"
-                            onClick={() => handleTechClick(key)}
-                        >
-                            <div className="text-sm sm:text-base font-medium text-white">{label}</div>
-                            <div className="mt-0.5 text-xs sm:text-sm text-gray-400 leading-snug">
-                                latest test: <span className="text-gray-300">{formatDateLabel(latestTechs[key])}</span>
-                            </div>
-                        </button>
-                    ))}
+        {/* Forceplates insights */}
+        {!loading && !error && athlete && (
+            <div className="rounded-xl border border-gray-800 bg-gradient-to-br from-white/5 to-transparent p-4 sm:p-5 shadow-sm"
+            onClick={() => router.push(`/admin/athlete/${athleteId}/vald/${athlete?.profileId}`)}
+            >
+                <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                        <div className="text-[11px] uppercase tracking-wide text-gray-400">Forceplates Insights</div>
+                        <div className="mt-1 text-3xl sm:text-4xl font-extrabold text-white">{formatCompositeScore(athlete.recentCompositeScore)}</div>
+                        <div className="mt-1 text-xs sm:text-sm text-gray-400">
+                            Latest VALD test: <span className="text-gray-300">{formatDateLabel(latestTechs?.vald)}</span>
+                        </div>
+                        {/* History line chart */}
+                        <div className="mt-3">
+                            <div className="mb-1 text-[11px] uppercase tracking-wide text-gray-400">Composite score trend</div>
+                            {(() => {
+                                const raw = (athlete as unknown as { compositeScoreHistory?: unknown })?.compositeScoreHistory
+                                let history: Array<{ score: number; date: string | Date }> = []
+                                if (Array.isArray(raw)) {
+                                    history = raw
+                                } else if (raw && typeof raw === 'object') {
+                                    // prisma Json can come as object or array; accept array only
+                                    const maybeArr = (raw as unknown)
+                                    if (Array.isArray(maybeArr)) history = maybeArr
+                                }
+                                return <CompositeScoreLineChart history={history} />
+                            })()}
+                        </div>
+                    </div>
+                    <div className="flex-none h-10 w-10 sm:h-12 sm:w-12 items-center justify-center">
+                        {(() => {
+                            const percent = getCompositePercent(athlete.recentCompositeScore)
+                            const size = 48 // px
+                            const strokeWidth = 5
+                            const radius = (size - strokeWidth) / 2
+                            const circumference = 2 * Math.PI * radius
+                            const dashOffset = circumference * (1 - percent)
+                            const strokeColor = getCompositeColor(percent)
+                            return (
+                                <svg
+                                    width="100%"
+                                    height="100%"
+                                    viewBox={`0 0 ${size} ${size}`}
+                                    aria-hidden="true"
+                                >
+                                    <g transform={`rotate(-90 ${size / 2} ${size / 2})`}>
+                                        <circle
+                                            cx={size / 2}
+                                            cy={size / 2}
+                                            r={radius}
+                                            fill="none"
+                                            stroke="rgba(255,255,255,0.12)"
+                                            strokeWidth={strokeWidth}
+                                        />
+                                        <circle
+                                            cx={size / 2}
+                                            cy={size / 2}
+                                            r={radius}
+                                            fill="none"
+                                            stroke={strokeColor}
+                                            strokeLinecap="round"
+                                            strokeWidth={strokeWidth}
+                                            strokeDasharray={circumference}
+                                            strokeDashoffset={dashOffset}
+                                        />
+                                    </g>
+                                </svg>
+                            )
+                        })()}
+                    </div>
                 </div>
             </div>
         )}
+
+        
 
 
     </div>

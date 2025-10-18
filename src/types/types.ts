@@ -13,8 +13,15 @@ export interface Athlete {
     playLevel: string;
     syncId: string;
     syncedAt: Date;
+    recentCompositeScore: number;
+    compositeScoreHistory: CompositeScoreHistoryInput[];
     createdAt: Date;
     updatedAt: Date;
+}
+
+export interface CompositeScoreHistoryInput {
+    score: number;
+    date: Date;
 }
 
 interface ResultDefinition {

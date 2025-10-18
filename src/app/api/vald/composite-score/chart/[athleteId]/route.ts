@@ -141,6 +141,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ athlete
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const { athleteId } = await context.params;
+    console.log('athleteId', athleteId);
     if (!athleteId) {
         console.error("Missing required parameter: athleteId");
     }
@@ -194,6 +195,16 @@ export async function GET(req: NextRequest, context: { params: Promise<{ athlete
             },
         });
 
+        const athlete = await prisma.athlete.findFirst({
+            where: {
+                profileId: athleteId,
+            },
+            select: {
+                recentCompositeScore: true,
+                id: true,
+            }
+        });
+
         console.log(JSON.stringify(imtpTests, null, 2));
         console.log(JSON.stringify(ppuTests, null, 2));
         console.log(JSON.stringify(sjTests, null, 2));
@@ -225,6 +236,59 @@ export async function GET(req: NextRequest, context: { params: Promise<{ athlete
         const bodyMassRelativeMeanTakeoffForcePercentile = percentRank(sjComposite.bodymassRelativeMeanConcentricPower!, sjBodyMassRelativeMeanTakeoffForceRef)
         const peakTakeoffPowerPercentile = percentRank(sjComposite.peakTakeoffPower, sjPeakPowerRef)
         const reactiveStrengthIndexPercentile = percentRank(hjComposite.reactiveStrengthIndex, hjRsiRef)
+
+        const compositeScore = (netPeakVerticalForcePercentile + relativeStrengthPercentile + peakTakeoffForcePercentile + peakTakeoffPowerPercentile + bodyMassRelativeMeanTakeoffForcePercentile + reactiveStrengthIndexPercentile) / 6;
+        if (!athlete?.recentCompositeScore) {
+            await prisma.athlete.update({
+                where: {
+                    id: athlete?.id ?? 0,
+                },
+                data: {
+                    recentCompositeScore: compositeScore,
+                },
+            });
+        }
+
+        // Persist composite score history (JSON array) with robust fallback handling
+        type CompositeScoreHistoryEntry = { score: number; date: string };
+        const existingHistory = await prisma.athlete.findFirst({
+            where: {
+                profileId: athleteId,
+            },
+            select: {
+                id: true,
+                compositeScoreHistory: true,
+            },
+        });
+
+        let history: CompositeScoreHistoryEntry[] = [];
+        const rawHistory = existingHistory?.compositeScoreHistory as unknown;
+        if (Array.isArray(rawHistory)) {
+            history = rawHistory as CompositeScoreHistoryEntry[];
+        } else if (typeof rawHistory === 'string') {
+            try {
+                const parsed = JSON.parse(rawHistory);
+                if (Array.isArray(parsed)) history = parsed as CompositeScoreHistoryEntry[];
+            } catch {}
+        } else if (rawHistory && typeof rawHistory === 'object') {
+            // default may be an object (e.g., {}), ignore and start fresh
+        }
+
+        console.log('history', history);
+        // Avoid duplicate entries by comparing rounded scores (2 decimals)
+        const lastEntry = history.length > 0 ? history[history.length - 1] : null;
+        //eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const lastScoreNum = lastEntry ? Number((lastEntry as any).score) : null;
+        const normalizedLast = lastScoreNum !== null && Number.isFinite(lastScoreNum) ? Number(lastScoreNum.toFixed(2)) : null;
+        const normalizedCurrent = Number(compositeScore.toFixed(2));
+
+        if (normalizedLast === null || normalizedLast !== normalizedCurrent) {
+            history.push({ score: normalizedCurrent, date: new Date().toISOString() });
+            await prisma.athlete.update({
+                where: { id: existingHistory?.id ?? 0 },
+                data: { compositeScoreHistory: history },
+            });
+        }
         
         return NextResponse.json({
             impt_net_peak_vertical_force: netPeakVerticalForcePercentile,

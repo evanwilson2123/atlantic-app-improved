@@ -26,6 +26,8 @@ model Athlete {
     playLevel String
     syncId String
     syncedAt DateTime
+    recentCompositeScore Float?
+    compositeScoreHistory Json? @default("{}")
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
