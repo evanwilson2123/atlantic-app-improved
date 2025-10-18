@@ -11,9 +11,18 @@ import {
     Tooltip,
     Legend,
     ChartOptions,
+    Plugin,
 } from 'chart.js'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
+
+// Round up to a visually "nice" axis maximum so reference lines are visible
+function computeNiceAxisMax(value: number): number {
+    const v = Math.max(1, value)
+    const mag = Math.pow(10, Math.floor(Math.log10(v)))
+    const step = mag / 2 // 0.5 * magnitude
+    return Math.ceil((v * 1.05) / step) * step
+}
 
 type ImtpNetPeakStat = {
     recordedUTC: string
@@ -28,6 +37,8 @@ const ImtpNetPeakCharts = () => {
     const [netPeakStats, setNetPeakStats] = useState<ImtpNetPeakStat[]>([]);
     const [overallPercentile, setOverallPercentile] = useState<number | null>(null);
     const [relOverallPercentile, setRelOverallPercentile] = useState<number | null>(null);
+    const [imtpTierLines, setImtpTierLines] = useState<{ developing: number | null; advanced: number | null; elite: number | null }>({ developing: null, advanced: null, elite: null })
+    const [relTierLines, setRelTierLines] = useState<{ developing: number | null; advanced: number | null; elite: number | null }>({ developing: null, advanced: null, elite: null })
     const { profileId } = useParams();
 
     const containerRef = useRef<HTMLDivElement | null>(null)
@@ -88,6 +99,55 @@ const ImtpNetPeakCharts = () => {
         }
         fetchPercentile()
     }, [profileId])
+
+    // Fetch percentile reference JSON to compute raw values for tier boundaries
+    useEffect(() => {
+        const valueAtPercentile = (target: number, ref: Record<number, number>): number | null => {
+            const points = Object.entries(ref)
+                .map(([k, v]) => [Number(k), Number(v)] as [number, number])
+                .filter(([p, v]) => Number.isFinite(p) && Number.isFinite(v))
+                .sort((a, b) => a[0] - b[0])
+            if (points.length === 0) return null
+            if (target <= points[0][0]) return points[0][1]
+            if (target >= points[points.length - 1][0]) return points[points.length - 1][1]
+            for (let i = 0; i < points.length - 1; i++) {
+                const [p1, v1] = points[i]
+                const [p2, v2] = points[i + 1]
+                if (target >= p1 && target <= p2) {
+                    const t = p2 === p1 ? 0 : (target - p1) / (p2 - p1)
+                    return v1 + t * (v2 - v1)
+                }
+            }
+            return null
+        }
+
+        const fetchRefs = async () => {
+            try {
+                const res = await fetch('/hp_obp_percentiles.json')
+                if (!res.ok) return
+                const json = await res.json() as Record<string, unknown>
+                const imtpRefRaw = json['net_peak_vertical_force_[n]_max_imtp'] as Record<string, number> | undefined
+                const relRefRaw = json['relative_strength'] as Record<string, number> | undefined
+                if (imtpRefRaw) {
+                    const imtpRef: Record<number, number> = Object.fromEntries(Object.entries(imtpRefRaw).map(([k, v]) => [Number(k), Number(v)]))
+                    setImtpTierLines({
+                        developing: valueAtPercentile(60, imtpRef),
+                        advanced: valueAtPercentile(75, imtpRef),
+                        elite: valueAtPercentile(90, imtpRef),
+                    })
+                }
+                if (relRefRaw) {
+                    const relRef: Record<number, number> = Object.fromEntries(Object.entries(relRefRaw).map(([k, v]) => [Number(k), Number(v)]))
+                    setRelTierLines({
+                        developing: valueAtPercentile(60, relRef),
+                        advanced: valueAtPercentile(75, relRef),
+                        elite: valueAtPercentile(90, relRef),
+                    })
+                }
+            } catch {}
+        }
+        fetchRefs()
+    }, [])
 
     const labels = useMemo(() => netPeakStats.map(s => new Date(s.recordedUTC).toLocaleDateString()), [netPeakStats])
     const values = useMemo(() => netPeakStats.map(s => Number(s.NET_PEAK_VERTICAL_FORCE_trial_value) || 0), [netPeakStats])
@@ -383,7 +443,16 @@ const ImtpNetPeakCharts = () => {
         }
     }, [labels, relValues, personalBestIndexRel, latestIndexRel])
 
-    const options = useMemo<ChartOptions<'bar'>>(() => ({
+    const options = useMemo<ChartOptions<'bar'>>(() => {
+        const tierMax = Math.max(
+            0,
+            imtpTierLines.developing ?? 0,
+            imtpTierLines.advanced ?? 0,
+            imtpTierLines.elite ?? 0,
+        )
+        const dataMax = values.length ? Math.max(...values) : 0
+        const yMax = computeNiceAxisMax(Math.max(tierMax, dataMax))
+        return ({
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
@@ -411,6 +480,8 @@ const ImtpNetPeakCharts = () => {
             },
             y: {
                 beginAtZero: true,
+                min: 0,
+                max: yMax,
                 grid: { color: 'rgba(51,65,85,0.25)' },
                 ticks: {
                     color: '#94a3b8',
@@ -418,9 +489,19 @@ const ImtpNetPeakCharts = () => {
                 },
             },
         },
-    }), [numberFmt, latestIndex, personalBestIndex])
+    })
+    }, [numberFmt, latestIndex, personalBestIndex, values, imtpTierLines])
 
-    const relOptions = useMemo<ChartOptions<'bar'>>(() => ({
+    const relOptions = useMemo<ChartOptions<'bar'>>(() => {
+        const tierMax = Math.max(
+            0,
+            relTierLines.developing ?? 0,
+            relTierLines.advanced ?? 0,
+            relTierLines.elite ?? 0,
+        )
+        const dataMax = relValues.length ? Math.max(...relValues) : 0
+        const yMax = computeNiceAxisMax(Math.max(tierMax, dataMax))
+        return ({
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
@@ -444,6 +525,8 @@ const ImtpNetPeakCharts = () => {
             x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
             y: {
                 beginAtZero: true,
+                min: 0,
+                max: yMax,
                 grid: { color: 'rgba(51,65,85,0.25)' },
                 ticks: {
                     color: '#94a3b8',
@@ -451,7 +534,71 @@ const ImtpNetPeakCharts = () => {
                 },
             },
         },
-    }), [numberFmtRel, latestIndexRel, personalBestIndexRel])
+    })
+    }, [numberFmtRel, latestIndexRel, personalBestIndexRel, relValues, relTierLines])
+
+    // Chart.js plugins to draw dotted tier lines
+    const netTierLinesPlugin = useMemo<Plugin<'bar'>>(() => ({
+        id: 'netTierLines',
+        afterDraw(chart) {
+            const y = chart.scales.y
+            const area = chart.chartArea
+            const ctx = chart.ctx
+            const draw = (val: number | null, color: string, label: string) => {
+                if (val === null || !Number.isFinite(val)) return
+                const py = y.getPixelForValue(val)
+                if (py < area.top || py > area.bottom) return
+                ctx.save()
+                ctx.setLineDash([4, 4])
+                ctx.strokeStyle = color
+                ctx.lineWidth = 1
+                ctx.beginPath()
+                ctx.moveTo(area.left, py)
+                ctx.lineTo(area.right, py)
+                ctx.stroke()
+                ctx.setLineDash([])
+                ctx.fillStyle = color
+                ctx.font = '10px sans-serif'
+                ctx.textAlign = 'right'
+                ctx.fillText(label, area.right - 4, py - 2)
+                ctx.restore()
+            }
+            draw(imtpTierLines.developing, '#94a3b8', 'Developing')
+            draw(imtpTierLines.advanced, '#fbbf24', 'Advanced')
+            draw(imtpTierLines.elite, '#22d3ee', 'Elite')
+        },
+    }), [imtpTierLines])
+
+    const relTierLinesPlugin = useMemo<Plugin<'bar'>>(() => ({
+        id: 'relTierLines',
+        afterDraw(chart) {
+            const y = chart.scales.y
+            const area = chart.chartArea
+            const ctx = chart.ctx
+            const draw = (val: number | null, color: string, label: string) => {
+                if (val === null || !Number.isFinite(val)) return
+                const py = y.getPixelForValue(val)
+                if (py < area.top || py > area.bottom) return
+                ctx.save()
+                ctx.setLineDash([4, 4])
+                ctx.strokeStyle = color
+                ctx.lineWidth = 1
+                ctx.beginPath()
+                ctx.moveTo(area.left, py)
+                ctx.lineTo(area.right, py)
+                ctx.stroke()
+                ctx.setLineDash([])
+                ctx.fillStyle = color
+                ctx.font = '10px sans-serif'
+                ctx.textAlign = 'right'
+                ctx.fillText(label, area.right - 4, py - 2)
+                ctx.restore()
+            }
+            draw(relTierLines.developing, '#94a3b8', 'Developing')
+            draw(relTierLines.advanced, '#fbbf24', 'Advanced')
+            draw(relTierLines.elite, '#22d3ee', 'Elite')
+        },
+    }), [relTierLines])
 
     return (
         <>
@@ -548,7 +695,7 @@ const ImtpNetPeakCharts = () => {
                 )}
                 {!loading && !error && netPeakStats.length > 0 && (
                     <div style={{ height }}>
-                        <Bar data={data} options={options} />
+                        <Bar data={data} options={options} plugins={[netTierLinesPlugin]} />
                     </div>
                 )}
             </div>
@@ -640,7 +787,7 @@ const ImtpNetPeakCharts = () => {
                     <div className="text-xs text-gray-400">No IMTP tests yet.</div>
                 )}
                 {!loading && netPeakStats.length > 0 && (
-                    <Bar data={relData} options={relOptions} />
+                    <Bar data={relData} options={relOptions} plugins={[relTierLinesPlugin]} />
                 )}
             </div>
         </div>
