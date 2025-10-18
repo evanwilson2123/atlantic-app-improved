@@ -155,6 +155,18 @@ const ImtpNetPeakCharts = () => {
     const relValues = useMemo(() => netPeakStats.map(s => Number(s.RELATIVE_STRENGTH_trial_value) || 0), [netPeakStats])
     const numberFmtRel = useMemo(() => new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }), [])
 
+    function tierColors(value: number, lines: { developing: number | null; advanced: number | null; elite: number | null }) {
+        const eliteC = { bg: 'rgba(34, 211, 238, 0.45)', border: '#22d3ee' } // cyan
+        const advC = { bg: 'rgba(251, 191, 36, 0.45)', border: '#fbbf24' } // amber
+        const devC = { bg: 'rgba(203, 213, 225, 0.45)', border: '#cbd5e1' } // slate
+        const fndC = { bg: 'rgba(167, 139, 250, 0.35)', border: '#a78bfa' } // violet
+        const { developing, advanced, elite } = lines
+        if (elite !== null && value >= elite) return eliteC
+        if (advanced !== null && value >= advanced) return advC
+        if (developing !== null && value >= developing) return devC
+        return fndC
+    }
+
     // Derived insights for Relative Strength (mirror of net peak)
     const {
         latestRelValue,
@@ -384,16 +396,8 @@ const ImtpNetPeakCharts = () => {
         const barPct = count > 24 ? 0.4 : count > 12 ? 0.5 : 0.6
         const catPct = count > 24 ? 0.8 : count > 12 ? 0.85 : 0.9
 
-        const bgs = values.map((_, i) => {
-            if (i === personalBestIndex) return 'rgba(99, 102, 241, 0.75)' // PB • indigo
-            if (i === latestIndex) return 'rgba(34, 197, 94, 0.75)' // Latest • green
-            return 'rgba(245, 158, 11, 0.35)' // Rest • amber
-        })
-        const borders = values.map((_, i) => {
-            if (i === personalBestIndex) return '#6366f1'
-            if (i === latestIndex) return '#22c55e'
-            return '#f59e0b'
-        })
+        const bgs = values.map((v) => tierColors(v, imtpTierLines).bg)
+        const borders = values.map((v) => tierColors(v, imtpTierLines).border)
 
         return {
             labels,
@@ -416,16 +420,8 @@ const ImtpNetPeakCharts = () => {
         const count = Math.max(1, relValues.length)
         const barPct = count > 24 ? 0.4 : count > 12 ? 0.5 : 0.6
         const catPct = count > 24 ? 0.8 : count > 12 ? 0.85 : 0.9
-        const bgs = relValues.map((_, i) => {
-            if (i === personalBestIndexRel) return 'rgba(99, 102, 241, 0.75)'
-            if (i === latestIndexRel) return 'rgba(34, 197, 94, 0.75)'
-            return 'rgba(99, 102, 241, 0.35)'
-        })
-        const borders = relValues.map((_, i) => {
-            if (i === personalBestIndexRel) return '#6366f1'
-            if (i === latestIndexRel) return '#22c55e'
-            return '#6366f1'
-        })
+        const bgs = relValues.map((v) => tierColors(v, relTierLines).bg)
+        const borders = relValues.map((v) => tierColors(v, relTierLines).border)
         return {
             labels,
             datasets: [
