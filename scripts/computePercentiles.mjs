@@ -31,13 +31,29 @@ function computeQuantile(sortedValues, p) {
 
 async function main() {
   const rootDir = process.cwd();
-  const inputCsv = path.resolve(rootDir, "public", "hp_obp.csv");
-  const outputJson = path.resolve(rootDir, "public", "hp_obp_percentiles.json");
-
-  if (!fs.existsSync(inputCsv)) {
-    console.error(`Input CSV not found at ${inputCsv}`);
-    process.exit(1);
+  const publicDir = path.resolve(rootDir, "public");
+  const defaultCsv = path.resolve(publicDir, "hp_obp.csv");
+  let inputCsv = defaultCsv;
+  if (!fs.existsSync(defaultCsv)) {
+    const candidates = fs
+      .readdirSync(publicDir)
+      .filter((f) => /^hp_obp.*\.csv$/i.test(f))
+      .map((f) => path.resolve(publicDir, f));
+    if (candidates.length === 0) {
+      console.error(
+        `Input CSV not found. Looked for ${defaultCsv} or any hp_obp*.csv in ${publicDir}`
+      );
+      process.exit(1);
+    }
+    candidates.sort((a, b) => {
+      const sa = fs.statSync(a).mtimeMs;
+      const sb = fs.statSync(b).mtimeMs;
+      return sb - sa; // newest first
+    });
+    inputCsv = candidates[0];
+    console.log(`Using input CSV: ${path.basename(inputCsv)}`);
   }
+  const outputJson = path.resolve(rootDir, "public", "hp_obp_percentiles.json");
 
   const parser = fs
     .createReadStream(inputCsv)
@@ -51,6 +67,7 @@ async function main() {
     );
 
   const numericColumns = {};
+  const byLevelNumeric = {};
   let headerColumns = [];
   let headerInitialized = false;
 
@@ -59,14 +76,24 @@ async function main() {
       headerColumns = Object.keys(record);
       headerInitialized = true;
     }
+    const levelRaw = record["playing_level"];
+    const levelKey = (levelRaw ? String(levelRaw) : "").trim() || "Unknown";
+    if (!byLevelNumeric[levelKey]) byLevelNumeric[levelKey] = {};
+
     for (const column of headerColumns) {
       const raw = record[column];
       if (!numericColumns[column]) {
         numericColumns[column] = { count: 0, values: [] };
       }
+      if (!byLevelNumeric[levelKey][column]) {
+        byLevelNumeric[levelKey][column] = { count: 0, values: [] };
+      }
       if (isNumericLike(raw)) {
-        numericColumns[column].values.push(Number(String(raw).trim()));
+        const num = Number(String(raw).trim());
+        numericColumns[column].values.push(num);
         numericColumns[column].count += 1;
+        byLevelNumeric[levelKey][column].values.push(num);
+        byLevelNumeric[levelKey][column].count += 1;
       }
     }
   }
@@ -96,7 +123,37 @@ async function main() {
     output[column] = series;
   }
 
-  fs.writeFileSync(outputJson, JSON.stringify(output, null, 2));
+  // Build grouped-by-playing_level section
+  const byLevelOutput = {};
+  for (const [level, columns] of Object.entries(byLevelNumeric)) {
+    const levelSeries = {};
+    for (const [column, summary] of Object.entries(columns)) {
+      if (summary.count === 0) continue;
+      const sorted = summary.values.slice().sort((a, b) => a - b);
+      const series = {};
+      for (const p of percentilesToCompute) {
+        const value = computeQuantile(sorted, p);
+        series[Math.round(p * 100).toString()] = Number.isFinite(value)
+          ? Number(value.toFixed(4))
+          : NaN;
+      }
+      const min = sorted[0];
+      const max = sorted[sorted.length - 1];
+      const mean = sorted.reduce((acc, v) => acc + v, 0) / sorted.length;
+      series.min = Number(min.toFixed(4));
+      series.max = Number(max.toFixed(4));
+      series.mean = Number(mean.toFixed(4));
+      levelSeries[column] = series;
+    }
+    byLevelOutput[level] = levelSeries;
+  }
+
+  const finalOutput = {
+    ...output,
+    __by_playing_level: byLevelOutput,
+  };
+
+  fs.writeFileSync(outputJson, JSON.stringify(finalOutput, null, 2));
   console.log(`Wrote percentiles to ${outputJson}`);
 }
 

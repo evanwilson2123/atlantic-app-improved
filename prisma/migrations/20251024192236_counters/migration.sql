@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE "public"."Athlete" ADD COLUMN     "cmjTestCounter" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "hjTestCounter" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "imtpTestCounter" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "ppuTestCounter" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "sjTestCounter" INTEGER NOT NULL DEFAULT 0;

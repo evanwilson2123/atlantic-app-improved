@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
-    "compute:percentiles": "node scripts/computePercentiles.mjs"
+    "compute:percentiles": "node scripts/computePercentiles.mjs",
+    "ingest:hpobp": "node scripts/ingestHpObp.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.31.9",

@@ -9,7 +9,7 @@ interface countMap {
     value: any;
 }
 
-export async function storeCMJTest(tests: Trial[], testId: string): Promise<boolean> {
+export async function storeCMJTest(tests: Trial[], testId: string, markedForUpsert: boolean, playLevel: string): Promise<boolean> {
     const data: Prisma.CMJTestCreateInput[] = [];
     try {
         for (const trial of tests) {
@@ -28,6 +28,12 @@ export async function storeCMJTest(tests: Trial[], testId: string): Promise<bool
             ;(trialData as Record<string, unknown>)[valueKey] = result.value
             ;(trialData as Record<string, unknown>)[unitKey] = result.definition.unit
         }
+        if (markedForUpsert) {
+            ;(trialData as Record<string, unknown>).marked_for_upsert = true;
+        }
+        if (playLevel) {
+            ;(trialData as Record<string, unknown>).playing_level = playLevel;
+        }
     }
         await prisma.cMJTest.createMany({ data })
         return true
@@ -37,7 +43,7 @@ export async function storeCMJTest(tests: Trial[], testId: string): Promise<bool
     }
 }
 
-export async function storeSJTest(tests: Trial[], testId: string): Promise<boolean> {
+export async function storeSJTest(tests: Trial[], testId: string, markedForUpsert: boolean, playLevel: string): Promise<boolean> {
     const data: Prisma.SJTestCreateInput[] = []
     try {
         for (const trial of tests) {
@@ -56,6 +62,12 @@ export async function storeSJTest(tests: Trial[], testId: string): Promise<boole
                 ;(trialData as Record<string, unknown>)[valueKey] = result.value;
                 ;(trialData as Record<string, unknown>)[unitKey] = result.definition.unit;
             } 
+            if (markedForUpsert) {
+                ;(trialData as Record<string, unknown>).marked_for_upsert = true;
+            }
+            if (playLevel) {
+                ;(trialData as Record<string, unknown>).playing_level = playLevel;
+            }
         }
         await prisma.sJTest.createMany({ data });
         return true;
@@ -65,7 +77,7 @@ export async function storeSJTest(tests: Trial[], testId: string): Promise<boole
     }
 }
 
-export async function storeHJTest(tests: Trial[], testId: string): Promise<boolean> {
+export async function storeHJTest(tests: Trial[], testId: string, markedForUpsert: boolean, playLevel: string): Promise<boolean> {
     const data: Prisma.HJTestCreateInput[] = [];
     const averageMap: Map<string, countMap> = new Map(); 
     try {
@@ -110,6 +122,12 @@ export async function storeHJTest(tests: Trial[], testId: string): Promise<boole
                 }
             }
             averageMap.clear();
+            if (markedForUpsert) {
+                ;(trialData as Record<string, unknown>).marked_for_upsert = true;
+            }
+            if (playLevel) {
+                ;(trialData as Record<string, unknown>).playing_level = playLevel;
+            }
         }
         await prisma.hJTest.createMany({ data });
         return true;
@@ -119,7 +137,7 @@ export async function storeHJTest(tests: Trial[], testId: string): Promise<boole
     }
 }
 
-export async function storePPUTest(tests: Trial[], testId: string): Promise<boolean> {
+export async function storePPUTest(tests: Trial[], testId: string, markedForUpsert: boolean, playLevel: string): Promise<boolean> {
     const data: Prisma.PPUTestCreateInput[] = [];
     try {
         for (const trial of tests) {
@@ -138,6 +156,12 @@ export async function storePPUTest(tests: Trial[], testId: string): Promise<bool
                 ;(trialData as Record<string, unknown>)[valueKey] = result.value;
                 ;(trialData as Record<string, unknown>)[unitKey] = result.definition.unit;
             }
+            if (markedForUpsert) {
+                ;(trialData as Record<string, unknown>).marked_for_upsert = true;
+            }
+            if (playLevel) {
+                ;(trialData as Record<string, unknown>).playing_level = playLevel;
+            }
         }
         await prisma.pPUTest.createMany({ data });
         return true;
@@ -147,7 +171,7 @@ export async function storePPUTest(tests: Trial[], testId: string): Promise<bool
     }
 }
 
-export async function storeIMTPTest(tests: Trial[], testId: string): Promise<boolean> {
+export async function storeIMTPTest(tests: Trial[], testId: string, markedForUpsert: boolean, playLevel: string): Promise<boolean> {
     const data: Prisma.IMTPTestCreateInput[] = [];
     const valdForceDecksAPI = new SimpleVALDForceDecksAPI();
     const valdTest = await valdForceDecksAPI.getTest(testId, tests[0].athleteId);
@@ -172,6 +196,12 @@ export async function storeIMTPTest(tests: Trial[], testId: string): Promise<boo
                 const unitKey = `${name}_${limbKey}_unit`;
                 ;(trialData as Record<string, unknown>)[valueKey] = result.value;
                 ;(trialData as Record<string, unknown>)[unitKey] = result.definition.unit;
+            }
+            if (markedForUpsert) {
+                ;(trialData as Record<string, unknown>).marked_for_upsert = true;
+            }
+            if (playLevel) {
+                ;(trialData as Record<string, unknown>).playing_level = playLevel;
             }
         }
         for (const trial of data) {

@@ -78,6 +78,24 @@ export async function POST(req: NextRequest, context: { params: Promise<{ profil
         return NextResponse.json({ error: "Missing required parameters: profileId" }, { status: 400 });
     }
     try {
+        const athlete = await prisma.athlete.findFirst({
+            where: {
+                profileId: profileId,
+            },
+            select: {
+                id: true,
+                imtpTestCounter: true,
+                sjTestCounter: true,
+                hjTestCounter: true,
+                ppuTestCounter: true,
+                cmjTestCounter: true,
+                playLevel: true,
+            }
+        });
+        if (!athlete) {
+            console.error("Athlete not found");
+            return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+        }
         const valdForceDecksAPI = new SimpleVALDForceDecksAPI();
         const modifiedFromUtc = await getLatestTests(profileId);
         let tests: VALDTest[] = [];
@@ -92,32 +110,126 @@ export async function POST(req: NextRequest, context: { params: Promise<{ profil
             console.log("No tests to sync");
             return NextResponse.json({ success: true }, { status: 200 });
         }
+        // Track which calendar days we've already counted per test type
+        const seenDays: Record<string, Set<string>> = {
+            CMJ: new Set<string>(),
+            SJ: new Set<string>(),
+            HJ: new Set<string>(),
+            PPU: new Set<string>(),
+            IMTP: new Set<string>(),
+        };
+
         for (const test of tests) {
             console.log(`Syncing test: ${test.testType}`);
+            // Normalize recorded date to UTC YYYY-MM-DD for day-level counting
+            const recorded = new Date(test.recordedDateUtc);
+            const dayKey = Number.isNaN(recorded.getTime())
+                ? String(test.recordedDateUtc).slice(0, 10)
+                : recorded.toISOString().slice(0, 10);
             switch (test.testType) {
                 case "CMJ": {
                     const trials: Trial[] = await valdForceDecksAPI.getTrials(test.testId);
-                    await storeCMJTest(trials, test.testId);
+                    let markedForUpsert: boolean = false;
+                    if (!seenDays.CMJ.has(dayKey)) {
+                        athlete.cmjTestCounter++;
+                        if (athlete.cmjTestCounter === 2) {
+                            markedForUpsert = true;
+                        }
+                        seenDays.CMJ.add(dayKey);
+                        await prisma.athlete.update({
+                            where: {
+                                id: athlete.id,
+                            },
+                            data: {
+                                cmjTestCounter: athlete.cmjTestCounter,
+                            },
+                        });
+                    }
+                    await storeCMJTest(trials, test.testId, markedForUpsert, athlete.playLevel);
                     break;
                 }   
                 case "SJ": {
                     const trials = await valdForceDecksAPI.getTrials(test.testId);
-                    await storeSJTest(trials, test.testId);
+                    let markedForUpsert: boolean = false;
+                    if (!seenDays.SJ.has(dayKey)) {
+                        athlete.sjTestCounter++;
+                        if (athlete.sjTestCounter === 2) {
+                            markedForUpsert = true;
+                        }
+                        seenDays.SJ.add(dayKey);
+                        await prisma.athlete.update({
+                            where: {
+                                id: athlete.id,
+                            },
+                            data: {
+                                sjTestCounter: athlete.sjTestCounter,
+                            },
+                        });
+                    }
+                    await storeSJTest(trials, test.testId, markedForUpsert, athlete.playLevel);
                     break;
                 }
                 case "HJ": {
                     const trials = await valdForceDecksAPI.getTrials(test.testId);
-                    await storeHJTest(trials, test.testId);
+                    let markedForUpsert: boolean = false;
+                    if (!seenDays.HJ.has(dayKey)) {
+                        athlete.hjTestCounter++;
+                        if (athlete.hjTestCounter === 2) {
+                            markedForUpsert = true;
+                        }
+                        seenDays.HJ.add(dayKey);
+                        await prisma.athlete.update({
+                            where: {
+                                id: athlete.id,
+                            },
+                            data: {
+                                hjTestCounter: athlete.hjTestCounter,
+                            },
+                        });
+                    }
+                    await storeHJTest(trials, test.testId, markedForUpsert, athlete.playLevel);
                     break;
                 }
                 case "PPU": {
                     const trials = await valdForceDecksAPI.getTrials(test.testId);
-                    await storePPUTest(trials, test.testId);
+                    let markedForUpsert: boolean = false;
+                    if (!seenDays.PPU.has(dayKey)) {
+                        athlete.ppuTestCounter++;
+                        if (athlete.ppuTestCounter === 2) {
+                            markedForUpsert = true;
+                        }
+                        seenDays.PPU.add(dayKey);
+                        await prisma.athlete.update({
+                            where: {
+                                id: athlete.id,
+                            },
+                            data: {
+                                ppuTestCounter: athlete.ppuTestCounter,
+                            },
+                        });
+                    }
+                    await storePPUTest(trials, test.testId, markedForUpsert, athlete.playLevel);
                     break;
                 }
                 case "IMTP": {
                     const trials = await valdForceDecksAPI.getTrials(test.testId);
-                    await storeIMTPTest(trials, test.testId);
+                    let markedForUpsert: boolean = false;
+                    if (!seenDays.IMTP.has(dayKey)) {
+                        athlete.imtpTestCounter++;
+                        if (athlete.imtpTestCounter === 2) {
+                            markedForUpsert = true;
+                        }
+                        seenDays.IMTP.add(dayKey);
+                        await prisma.athlete.update({
+                            where: {
+                                id: athlete.id,
+                            },
+                            data: {
+                                imtpTestCounter: athlete.imtpTestCounter,
+                            },
+                        });
+                    }
+                    await storeIMTPTest(trials, test.testId, markedForUpsert, athlete.playLevel);
                     break;
                 }
                 default: {

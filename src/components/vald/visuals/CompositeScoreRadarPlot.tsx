@@ -12,6 +12,8 @@ type PercentilesResponse = {
   peak_power_ppu: number
   sj_peak_power_w: number
   reactive_strength_index_hj: number
+  incomplete?: boolean
+  message?: string
 }
 
 const METRICS: Array<{ key: keyof PercentilesResponse; label: string }> = [
@@ -85,7 +87,7 @@ const CompositeScoreRadarPlot = () => {
       }
     }
     if (athleteId) fetchData()
-  }, [athleteId])
+  }, [athleteId, profileId])
 
   const size = 360
   const padding = 28
@@ -134,6 +136,17 @@ const CompositeScoreRadarPlot = () => {
 
   if (loading) return <Loading />;
 
+  if (data?.incomplete) {
+    return (
+      <div className="w-full max-w-3xl mx-auto">
+        <div className="rounded-2xl border border-gray-800 bg-black p-5 sm:p-7 shadow-sm text-white">
+          <h3 className="text-base sm:text-lg font-semibold">Composite Performance (Percentile)</h3>
+          <p className="mt-2 text-sm text-gray-300">Every test type hasn&apos;t been recorded yet. Please record at least one of IMTP, PPU, SJ, and HJ.</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="w-full max-w-3xl mx-auto">
       <div className="rounded-2xl border border-gray-800 bg-black p-5 sm:p-7 shadow-sm">
@@ -142,9 +155,12 @@ const CompositeScoreRadarPlot = () => {
             <h3 className="text-base sm:text-lg font-semibold text-white">Composite Performance (Percentile)</h3>
             <p className="text-xs text-gray-400">Percent ranks (0–100); higher is better.</p>
           </div>
-          {data && (
+          {data && !data.incomplete && (
             <div className="shrink-0 inline-flex items-center rounded-full bg-white/10 text-white px-3 py-1 text-lg">
-              Composite Score {(Object.values(data).reduce((acc, curr) => acc + curr, 0) / METRICS.length).toFixed(1)}
+              {(() => {
+                const sum = METRICS.reduce((acc, m) => acc + (Number(data[m.key] ?? 0) || 0), 0)
+                return `Composite Score ${(sum / METRICS.length).toFixed(1)}`
+              })()}
             </div>
           )}
         </div>

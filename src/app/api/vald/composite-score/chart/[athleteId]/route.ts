@@ -39,6 +39,7 @@ function filterTests(tests: Array<{ recordedUTC: Date | string, testId: string }
     const dayMs = 1000 * 60 * 60 * 24
     const filteredTests: string[] = []
     for (const test of tests) {
+        console.log('test', test.recordedUTC);
         const t = test.recordedUTC
         const tTime = t instanceof Date ? t.getTime() : new Date(t as string).getTime()
         if (Math.abs(tTime - baseTime) < dayMs) filteredTests.push(test.testId)
@@ -54,10 +55,6 @@ async function imtpCompositeData(testIds: string[]) {
             },
         },
     });
-    for (const test of imtpTests) {
-        console.log('net peak vertical force', test.NET_PEAK_VERTICAL_FORCE_trial_value);
-        console.log('relative strength', test.RELATIVE_STRENGTH_trial_value);
-    }
     // average netpeak vertical force
     if (imtpTests.length === 0) return { netPeakVerticalForce: 0, relativeStrength: 0 }
     const netPeakVerticalForce = imtpTests.reduce((acc, test) => acc + (test.NET_PEAK_VERTICAL_FORCE_trial_value || 0), 0) / imtpTests.length;
@@ -77,9 +74,6 @@ async function ppuCompositeData(testIds: string[]) {
             },
         },
     });
-    for (const test of ppuTests) {
-        console.log('peak takeoff force', test.PEAK_TAKEOFF_FORCE_trial_value);
-    }
     // average bodymass relative mean takeoff force
     if (ppuTests.length === 0) return { peakTakeoffForce: 0 }
     // average peak takeoff force
@@ -99,10 +93,10 @@ async function sjCompositeData(testIds: string[]) {
     });
     // average peak takeoff power
     if (sjTests.length === 0) return { peakTakeoffPower: 0 }
-    for (const test of sjTests) {
-        console.log('peak takeoff power', test.PEAK_TAKEOFF_POWER_trial_value);
-        console.log('bodymass relative mean concentric power', test.BODYMASS_RELATIVE_TAKEOFF_POWER_trial_value);
-    }
+    // for (const test of sjTests) {
+    //     console.log('peak takeoff power', test.PEAK_TAKEOFF_POWER_trial_value);
+    //     console.log('bodymass relative mean concentric power', test.BODYMASS_RELATIVE_TAKEOFF_POWER_trial_value);
+    // }
     const peakTakeoffPower = sjTests.reduce((acc, test) => acc + (test.PEAK_TAKEOFF_POWER_trial_value || 0), 0) / sjTests.length;
     // average bodymass relative mean concentric power
         const bodymassRelativeMeanConcentricPower = sjTests.reduce((acc, test) => acc + (test.BODYMASS_RELATIVE_TAKEOFF_POWER_trial_value  || 0), 0) / sjTests.length;
@@ -122,9 +116,9 @@ async function hjCompositeData(testIds: string[]) {
     });
     // average reactive strength index
     if (hjTests.length === 0) return { reactiveStrengthIndex: 0 }
-    for (const test of hjTests) {
-        console.log('reactive strength index', test.HOP_MEAN_RSI_trial_value);
-    }
+    // for (const test of hjTests) {
+    //     console.log('reactive strength index', test.HOP_MEAN_RSI_trial_value);
+    // }
     const reactiveStrengthIndex = hjTests.reduce((acc, test) => acc + (test.HOP_MEAN_RSI_trial_value || 0), 0) / hjTests.length;
     return {
         reactiveStrengthIndex: reactiveStrengthIndex,
@@ -141,7 +135,6 @@ export async function GET(req: NextRequest, context: { params: Promise<{ athlete
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const { athleteId } = await context.params;
-    console.log('athleteId', athleteId);
     if (!athleteId) {
         console.error("Missing required parameter: athleteId");
     }
@@ -202,18 +195,44 @@ export async function GET(req: NextRequest, context: { params: Promise<{ athlete
             select: {
                 recentCompositeScore: true,
                 id: true,
+                playLevel: true,
             }
         });
 
-        console.log(JSON.stringify(imtpTests, null, 2));
-        console.log(JSON.stringify(ppuTests, null, 2));
-        console.log(JSON.stringify(sjTests, null, 2));
-        console.log(JSON.stringify(hjTests, null, 2));
+        // console.log(JSON.stringify(imtpTests, null, 2));
+        // console.log(JSON.stringify(ppuTests, null, 2));
+        // console.log(JSON.stringify(sjTests, null, 2));
+        // console.log(JSON.stringify(hjTests, null, 2));
+
+        const playingLevel = athlete?.playLevel;
+        if (!playingLevel) {
+            return NextResponse.json({ error: "Playing Level" }, { status: 400 });
+        }
+        // Normalize to keys present in __by_playing_level of hp_obp_percentiles.json
+        const pl = String(playingLevel).trim().toLowerCase();
+        let playingLevelKey = "Unknown";
+        if (pl === "high school" || pl === "high_school" || pl === "highschool") playingLevelKey = "High School";
+        else if (pl === "college") playingLevelKey = "College";
+        else if (pl === "pro" || pl === "professional") playingLevelKey = "Pro";
         
         const imtpFilteredTests = filterTests(imtpTests);
         const ppuFilteredTests = filterTests(ppuTests);
         const sjFilteredTests = filterTests(sjTests);
         const hjFilteredTests = filterTests(hjTests);
+
+        // Require at least one test present for each type before computing/returning a score
+        const missingTypes: string[] = [];
+        if (imtpFilteredTests.length === 0) missingTypes.push("IMTP");
+        if (ppuFilteredTests.length === 0) missingTypes.push("PPU");
+        if (sjFilteredTests.length === 0) missingTypes.push("SJ");
+        if (hjFilteredTests.length === 0) missingTypes.push("HJ");
+        if (missingTypes.length > 0) {
+            return NextResponse.json({
+                incomplete: true,
+                message: "Every test type hasn't been recorded yet",
+                missingTypes,
+            });
+        }
 
         const imtpComposite = await imtpCompositeData(imtpFilteredTests);
         const ppuComposite = await ppuCompositeData(ppuFilteredTests);
@@ -222,12 +241,19 @@ export async function GET(req: NextRequest, context: { params: Promise<{ athlete
         
         // calculate percentiles based on json file in public/hp_obp_percentiles.json
         const percentiles = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "public", "hp_obp_percentiles.json"), "utf8"));
-        const imtpNetPeakRef = percentiles["net_peak_vertical_force_[n]_max_imtp"] as Record<string, number>;
-        const imtpRelStrengthRef = percentiles["relative_strength"] as Record<string, number>;
-        const ppuPeakForceRef = percentiles["peak_takeoff_force_[n]_mean_pp"] as Record<string, number>;
-        const sjBodyMassRelativeMeanTakeoffForceRef = percentiles["peak_power_/_bm_[w/kg]_mean_sj"] as Record<string, number>;
-        const sjPeakPowerRef = percentiles["peak_power_[w]_mean_sj"] as Record<string, number>;
-        const hjRsiRef = percentiles["best_rsi_(flight/contact_time)_mean_ht"] as Record<string, number>; // RSI
+        // console.log('percentiles', JSON.stringify(percentiles, null, 2));
+        const byLevel = percentiles["__by_playing_level"] || {};
+        const playingLevelRef = byLevel[playingLevelKey] || byLevel["Unknown"];
+        // console.log(playingLevelKey, playingLevelRef);
+        if (!playingLevelRef) {
+            return NextResponse.json({ error: "Playing Level Ref" }, { status: 400 });
+        }
+        const imtpNetPeakRef = playingLevelRef["net_peak_vertical_force_[n]_max_imtp"] as Record<string, number>;
+        const imtpRelStrengthRef = playingLevelRef["relative_strength"] as Record<string, number>;
+        const ppuPeakForceRef = playingLevelRef["peak_takeoff_force_[n]_mean_pp"] as Record<string, number>;
+        const sjBodyMassRelativeMeanTakeoffForceRef = playingLevelRef["peak_power_/_bm_[w/kg]_mean_sj"] as Record<string, number>;
+        const sjPeakPowerRef = playingLevelRef["peak_power_[w]_mean_sj"] as Record<string, number>;
+        const hjRsiRef = playingLevelRef["best_rsi_(flight/contact_time)_mean_ht"] as Record<string, number>; // RSI
 
         const netPeakVerticalForcePercentile = percentRank(imtpComposite.netPeakVerticalForce, imtpNetPeakRef)
         const relativeStrengthPercentile = percentRank(imtpComposite.relativeStrength, imtpRelStrengthRef)
@@ -238,7 +264,10 @@ export async function GET(req: NextRequest, context: { params: Promise<{ athlete
         const reactiveStrengthIndexPercentile = percentRank(hjComposite.reactiveStrengthIndex, hjRsiRef)
 
         const compositeScore = (netPeakVerticalForcePercentile + relativeStrengthPercentile + peakTakeoffForcePercentile + peakTakeoffPowerPercentile + bodyMassRelativeMeanTakeoffForcePercentile + reactiveStrengthIndexPercentile) / 6;
-        if (!athlete?.recentCompositeScore) {
+        const existingScore = athlete?.recentCompositeScore ?? null;
+        const normalizedExisting = existingScore !== null && Number.isFinite(existingScore) ? Number(existingScore.toFixed(2)) : null;
+        const normalizedCurrent = Number(compositeScore.toFixed(2));
+        if (normalizedExisting === null || normalizedExisting !== normalizedCurrent) {
             await prisma.athlete.update({
                 where: {
                     id: athlete?.id ?? 0,
@@ -280,10 +309,10 @@ export async function GET(req: NextRequest, context: { params: Promise<{ athlete
         //eslint-disable-next-line @typescript-eslint/no-explicit-any
         const lastScoreNum = lastEntry ? Number((lastEntry as any).score) : null;
         const normalizedLast = lastScoreNum !== null && Number.isFinite(lastScoreNum) ? Number(lastScoreNum.toFixed(2)) : null;
-        const normalizedCurrent = Number(compositeScore.toFixed(2));
+        const normalizedCurrentHistory = Number(compositeScore.toFixed(2));
 
-        if (normalizedLast === null || normalizedLast !== normalizedCurrent) {
-            history.push({ score: normalizedCurrent, date: new Date().toISOString() });
+        if (normalizedLast === null || normalizedLast !== normalizedCurrentHistory) {
+            history.push({ score: normalizedCurrentHistory, date: new Date().toISOString() });
             await prisma.athlete.update({
                 where: { id: existingHistory?.id ?? 0 },
                 data: { compositeScoreHistory: history },
