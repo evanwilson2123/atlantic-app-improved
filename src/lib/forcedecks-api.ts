@@ -230,20 +230,21 @@ export class SimpleVALDForceDecksAPI {
   /**
    * Get all tests for a profile after a certain date
    */
-  async getUnsyncedTests(profileId: string, modifiedFromUtc: string): Promise<VALDTest[]> {
+  async getUnsyncedTests(profileId: string, latestForceplatesSync: string): Promise<{ tests: VALDTest[] }> {
     try {
-      console.log(`📋 Fetching unsynced tests for profile ${profileId} after ${modifiedFromUtc}...`)
+      console.log(`📋 Fetching unsynced tests for profile ${profileId} after ${latestForceplatesSync}...`)
       
       const queryParams = new URLSearchParams({
         TenantId: this.tenantId,
         ProfileId: profileId,
-        ModifiedFromUtc: modifiedFromUtc,
+        ModifiedFromUtc: latestForceplatesSync,
       })
 
-      const response = await this.makeRequest<VALDTest[]>(`/tests?${queryParams.toString()}`)
-      console.log(`📊 Found ${response?.length || 0} unsynced tests`)
+      const response = await this.makeRequest<{ tests: VALDTest[] }>(`/tests?${queryParams.toString()}`)
+      console.log(JSON.stringify(response, null, 2))
+      console.log(`📊 Found ${response?.tests?.length || 0} unsynced tests`)
       
-      return response || [];
+      return response || { tests: [] };
     } catch (error) {
       console.error('❌ Error fetching unsynced tests:', error instanceof Error ? error.message : 'Unknown error')
       throw error

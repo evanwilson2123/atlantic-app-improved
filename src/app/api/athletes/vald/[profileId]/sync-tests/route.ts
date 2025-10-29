@@ -90,20 +90,22 @@ export async function POST(req: NextRequest, context: { params: Promise<{ profil
                 ppuTestCounter: true,
                 cmjTestCounter: true,
                 playLevel: true,
+                forceplatesLatestSync: true,
             }
         });
         if (!athlete) {
             console.error("Athlete not found");
             return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
         }
+        const latestForceplatesSync = athlete.forceplatesLatestSync;
         const valdForceDecksAPI = new SimpleVALDForceDecksAPI();
-        const modifiedFromUtc = await getLatestTests(profileId);
         let tests: VALDTest[] = [];
-        if (!modifiedFromUtc) {
-            const resp = await valdForceDecksAPI.getTests(new Date(0).toISOString(), profileId);
+        if (latestForceplatesSync) {
+            const resp = (await valdForceDecksAPI.getUnsyncedTests(profileId, latestForceplatesSync.toISOString())) ?? [];
             tests = resp?.tests ?? [];
         } else {
-            tests = (await valdForceDecksAPI.getUnsyncedTests(profileId, modifiedFromUtc.toISOString())) ?? [];
+            const resp = await valdForceDecksAPI.getTests(new Date(0).toISOString(), profileId);
+            tests = resp?.tests ?? [];
         }
         console.log(`Found ${tests.length} tests to sync`);
         if (tests.length === 0) {
@@ -239,6 +241,14 @@ export async function POST(req: NextRequest, context: { params: Promise<{ profil
             }
         }
         console.log("All tests synced successfully");
+        await prisma.athlete.update({
+            where: {
+                id: athlete.id,
+            },
+            data: {
+                forceplatesLatestSync: new Date(),
+            },
+        });
         return NextResponse.json({ success: true }, { status: 200 });
     } catch (error) {
         console.error("Error syncing tests", error);
